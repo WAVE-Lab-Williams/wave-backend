@@ -4,7 +4,14 @@ version = "0.1.0"
 description = "FastAPI backend for the WAVE lab with Postgres database support"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = ["python-dotenv>=1.0.0"]
+dependencies = [
+    "python-dotenv>=1.0.0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "asyncpg>=0.30.0",
+    "sqlalchemy[asyncio]>=2.0.36",
+    "alembic>=1.14.0",
+]
 
 
 [tool.setuptools]
@@ -24,6 +31,7 @@ test = [
     "pytest-asyncio>=0.26.0",
     "pytest-cov>=6.0.0",
     "pytest-mock>=3.14.0",
+    "httpx>=0.28.0",
 ]
 
 [tool.black]
@@ -33,3 +41,7 @@ extend-exclude = "notebooks"
 [tool.isort]
 skip = ["__init__.py", ".venv"]
 profile = "black"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"

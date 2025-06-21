@@ -1,13 +1,14 @@
 ###############################################################################
 # MAIN CONFIGURATION
 ###############################################################################
-.PHONY: clean format 
+.PHONY: clean format
 
 SOURCE_DIR=./src
-SOURCE_PATH=./src/wave-backend
+SOURCE_PATH=./src/wave_backend
 TESTS_DIR=./tests
 PYTEST_LOG_LEVEL=DEBUG
 PYTEST_COV_MIN=50
+
 
 # Load all environment variables from .env
 # so that they are preloaded before running any command here
@@ -77,7 +78,51 @@ setup-local-dev:
 	uv pip install -e .[dev,test]
 	@echo "Installing pre-commit hooks..."
 	uv run pre-commit install
+	@echo "Creating .env file from template..."
+	@if [ ! -f .env ]; then cp .env.example .env; echo ".env file created from template"; fi
 	@echo "Local development environment ready!"
+
+# FastAPI Development Server
+serve:
+	@echo "Starting FastAPI development server..."
+	uv run uvicorn wave_backend.api.main:app --host $(FASTAPI_HOST) --port $(FASTAPI_PORT) --reload
+
+# Database Development Commands
+dev-db: podman-check
+	@echo "Starting development PostgreSQL database..."
+	$(COMPOSE_CMD) up -d postgres
+
+dev-db-stop:
+	@echo "Stopping development PostgreSQL database..."
+	$(COMPOSE_CMD) down
+
+dev-db-logs:
+	@echo "Showing PostgreSQL database logs..."
+	$(COMPOSE_CMD) logs -f postgres
+
+dev-db-reset: dev-db-stop
+	@echo "Resetting development database (removing volumes)..."
+	$(COMPOSE_CMD) down -v
+	$(COMPOSE_CMD) up -d postgres
+
+# Test Database Commands
+test-db: podman-check
+	@echo "Starting test PostgreSQL database..."
+	$(COMPOSE_CMD) --profile test up -d postgres-test
+
+test-db-stop:
+	@echo "Stopping test PostgreSQL database..."
+	$(COMPOSE_CMD) --profile test down
+
+# Combined Development Commands
+dev: dev-db
+	@echo "Starting full development environment..."
+	@echo "Waiting for database to be ready..."
+	@sleep 5
+	@$(MAKE) serve
+
+dev-stop: dev-db-stop
+	@echo "Development environment stopped"
 
 # Add podman-check target to handle Podman machine initialization
 podman-check:
