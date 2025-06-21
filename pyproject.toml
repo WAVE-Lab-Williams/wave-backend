@@ -1,7 +1,35 @@
 [project]
 name = "wave-backend"
 version = "0.1.0"
-description = "Add your description here"
+description = "FastAPI backend for the WAVE lab with Postgres database support"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = ["python-dotenv>=1.0.0"]
+
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = {find = {where = ["src"], include = ["wave_backend*"]}}
+
+[project.optional-dependencies]
+dev = [
+    "black>=24.10.0",
+    "flake8>=7.1.1",
+    "isort>=5.13.2",
+    "pre-commit>=4.0.1",
+    "pylint>=3.3.3",
+]
+test = [
+    "pytest>=8.3.4",
+    "pytest-asyncio>=0.26.0",
+    "pytest-cov>=6.0.0",
+    "pytest-mock>=3.14.0",
+]
+
+[tool.black]
+line-length = 100
+extend-exclude = "notebooks"
+
+[tool.isort]
+skip = ["__init__.py", ".venv"]
+profile = "black"
