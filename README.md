@@ -51,20 +51,32 @@ FastAPI backend for the WAVE lab with PostgreSQL database support.
 - `make dev-db-logs` - Show database logs
 - `make dev-db-reset` - Reset database (removes all data)
 
+### Test Database
+- `make test-db` - Start test PostgreSQL database
+- `make test-db-stop` - Stop test database
+
+### Docker/Podman Management
+- `make docker-up` - Start all services with Docker Compose
+- `make docker-down` - Stop all services with Docker Compose
+- `make docker-logs` - Show logs for all services
+- `make docker-status` - Show status of all services
+- `make docker-shell-postgres` - Connect to PostgreSQL database shell
+- `make docker-clean` - Clean unused Docker/Podman resources
+- `make docker-deep-clean` - Deep clean ALL Docker/Podman resources (with confirmation)
+
 ### Testing
 - `make test-small` - Run small tests
+- `make test-medium` - Run medium tests
+- `make test-large` - Run large tests
 - `make test-all` - Run all tests
-- `make test-db` - Start test database
-- `make test-db-stop` - Stop test database
 
 ### Code Quality
 - `make format` - Format code (isort, black, flake8, pylint)
 - `make clean` - Clean up temporary files
 
-## Database and FastAPI Configuration
+## Configuration
 
-The PostgreSQL database and FastAPI endpoint are configured with environment variables,
-see `.env.example`
+The application uses environment variables for configuration. All PostgreSQL and FastAPI settings are loaded from the `.env` file (refer to `.env.examaple`)
 
 ### Environment Variables
 
@@ -73,4 +85,13 @@ Copy `.env.example` to `.env` and modify as needed:
 ```bash
 cp .env.example .env
 ```
+
+Key configuration variables:
+- `POSTGRES_DB` - PostgreSQL database name (default: wave_dev)
+- `POSTGRES_USER` - PostgreSQL username (default: wave_user)  
+- `POSTGRES_PASSWORD` - PostgreSQL password (default: wave_password)
+- `POSTGRES_PORT` - PostgreSQL port (default: 5432)
+- `POSTGRES_TEST_PORT` - Test database port (default: 5433)
+- `FASTAPI_HOST` - FastAPI host (default: 0.0.0.0)
+- `FASTAPI_PORT` - FastAPI port (default: 8000)
 

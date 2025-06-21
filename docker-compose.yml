@@ -3,17 +3,17 @@ services:
     image: postgres:16-alpine
     container_name: wave-postgres-dev
     environment:
-      POSTGRES_DB: wave_dev
-      POSTGRES_USER: wave_user
-      POSTGRES_PASSWORD: wave_password
+      POSTGRES_DB: ${POSTGRES_DB:-wave_dev}
+      POSTGRES_USER: ${POSTGRES_USER:-wave_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wave_password}
       POSTGRES_HOST_AUTH_METHOD: trust
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U wave_user -d wave_dev"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-wave_user} -d ${POSTGRES_DB:-wave_dev}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -24,16 +24,16 @@ services:
     image: postgres:16-alpine
     container_name: wave-postgres-test
     environment:
-      POSTGRES_DB: wave_test
-      POSTGRES_USER: wave_user
-      POSTGRES_PASSWORD: wave_password
+      POSTGRES_DB: ${POSTGRES_TEST_DB:-wave_test}
+      POSTGRES_USER: ${POSTGRES_USER:-wave_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wave_password}
       POSTGRES_HOST_AUTH_METHOD: trust
     ports:
-      - "5433:5432"
+      - "${POSTGRES_TEST_PORT:-5433}:5432"
     tmpfs:
       - /var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U wave_user -d wave_test"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-wave_user} -d ${POSTGRES_TEST_DB:-wave_test}"]
       interval: 5s
       timeout: 5s
       retries: 5

@@ -124,6 +124,57 @@ dev: dev-db
 dev-stop: dev-db-stop
 	@echo "Development environment stopped"
 
+###############################################################################
+# Docker Compose Commands
+###############################################################################
+
+# Start all services with Docker Compose
+docker-up: podman-check
+	$(COMPOSE_CMD) up -d
+	@echo "All services started with Docker Compose"
+	@echo "FastAPI: http://localhost:$(FASTAPI_PORT)"
+
+# Stop all services with Docker Compose
+docker-down: podman-check
+	$(COMPOSE_CMD) down
+	@echo "All services stopped with Docker Compose"
+
+# Clean Docker/Podman resources (images, containers, etc.)
+docker-clean: docker-down
+	@echo "Cleaning Docker/Podman resources..."
+	$(DOCKER_CMD) system prune -f
+	@echo "Removed unused containers, networks, and dangling images"
+
+# Deep clean all Docker/Podman resources including volumes
+docker-deep-clean: docker-down
+	@echo "WARNING: This will remove ALL Docker/Podman resources including volumes!"
+	@echo "This operation cannot be undone."
+	@read -p "Are you sure you want to continue? [y/N] " confirm; \
+	if [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ]; then \
+		echo "Performing deep clean of Docker/Podman resources..."; \
+		$(DOCKER_CMD) system prune -af --volumes; \
+		if [ "$(DOCKER_CMD)" = "podman" ]; then \
+			echo "Removing podman machine..."; \
+			podman machine rm -f $(MACHINE_NAME) || true; \
+			echo "Podman machine removed"; \
+		fi; \
+		echo "Deep clean completed"; \
+	else \
+		echo "Deep clean cancelled"; \
+	fi
+
+# Show logs for all services
+docker-logs: podman-check
+	$(COMPOSE_CMD) logs -f
+
+# Show status of all services
+docker-status: podman-check
+	$(COMPOSE_CMD) ps
+
+# Connect to the PostgreSQL container shell
+docker-shell-postgres: podman-check
+	$(DOCKER_CMD) exec -it wave-postgres-dev psql -U $(POSTGRES_USER) -d $(POSTGRES_DB)
+
 # Add podman-check target to handle Podman machine initialization
 podman-check:
 ifeq "$(DOCKER_CMD)" "podman"
