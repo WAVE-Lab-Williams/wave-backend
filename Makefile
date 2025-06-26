@@ -114,6 +114,25 @@ test-db-stop:
 	@echo "Stopping test PostgreSQL database..."
 	$(COMPOSE_CMD) --profile test down
 
+test-db-reset: test-db-stop
+	@echo "Resetting test database (removing volumes)..."
+	$(COMPOSE_CMD) --profile test down -v
+	$(COMPOSE_CMD) --profile test up -d postgres-test
+
+# Combined Database Commands
+db-stop: dev-db-stop test-db-stop
+	@echo "All databases stopped"
+
+db-reset: dev-db-stop test-db-stop
+	@echo "Resetting both development and test databases (removing volumes)..."
+	$(COMPOSE_CMD) down -v
+	$(COMPOSE_CMD) --profile test down -v
+	@echo "Starting development database..."
+	$(COMPOSE_CMD) up -d postgres
+	@echo "Starting test database..."
+	$(COMPOSE_CMD) --profile test up -d postgres-test
+	@echo "Both databases reset and restarted"
+
 # Combined Development Commands
 dev: dev-db
 	@echo "Starting full development environment..."
@@ -123,6 +142,20 @@ dev: dev-db
 
 dev-stop: dev-db-stop
 	@echo "Development environment stopped"
+
+# Complete shutdown - stops everything
+shutdown: 
+	@echo "Shutting down all development services..."
+	@echo "Stopping FastAPI server (if running)..."
+	@pkill -f "uvicorn wave_backend.api.main:app" || true
+	@echo "Stopping all Docker/Podman containers..."
+	$(COMPOSE_CMD) down
+	$(COMPOSE_CMD) --profile test down
+	@echo "Stopping podman machine (if using podman)..."
+ifeq "$(DOCKER_CMD)" "podman"
+	@podman machine stop $(MACHINE_NAME) || true
+endif
+	@echo "Complete shutdown finished - all services stopped"
 
 ###############################################################################
 # Docker Compose Commands
@@ -199,13 +232,15 @@ define run_tests
 		> logs/pytest_output.log
 endef
 
-test-all:
+test-all: test-db
+	@echo "Running all tests with test database..."
 	$(call run_tests,${TESTS_DIR},${PYTEST_COV_MIN})
 
 test-small:
 	$(call run_tests,${TESTS_DIR}/small)
 
-test-medium:
+test-medium: test-db
+	@echo "Running medium tests with test database..."
 	$(call run_tests,${TESTS_DIR}/medium)
 
 test-large:

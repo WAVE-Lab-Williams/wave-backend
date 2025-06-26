@@ -18,22 +18,36 @@ This is a FastAPI backend for the WAVE lab with PostgreSQL database support. The
 make setup-local-dev    # Initial setup: creates venv, installs deps, sets up pre-commit
 make dev               # Start database and FastAPI server together
 make serve             # Start just the FastAPI server (assumes DB is running)
+make shutdown          # Complete shutdown: stops all services, databases, containers
 ```
+
+**Important**: The `shutdown` command provides a comprehensive cleanup that stops:
+- FastAPI development server (uvicorn process)
+- All Docker/Podman containers (dev + test databases)  
+- Podman machine (if using Podman)
+
+Use this when you want to completely clean up the development environment.
 
 ### Database Management
 ```bash
 make dev-db            # Start development PostgreSQL (port 5432)
 make test-db           # Start test PostgreSQL (port 5433)
 make dev-db-reset      # Reset dev database (removes all data)
+make test-db-reset     # Reset test database (removes all data)
+make db-reset          # Reset both databases (removes all data)
+make db-stop           # Stop both databases
 ```
 
 ### Testing
 ```bash
-make test-small        # Run small/unit tests
-make test-medium       # Run medium/integration tests  
+make test-small        # Run small/unit tests (no database required)
+make test-medium       # Run medium/integration tests (auto-starts test DB)
 make test-large        # Run large/end-to-end tests
-make test-all          # Run all test suites
+make test-all          # Run all test suites (auto-starts test DB)
 ```
+
+**Important**: Medium and full test suites require the test database (PostgreSQL on port 5433). 
+The `test-medium` and `test-all` commands automatically start the test database as a dependency.
 
 WARNING: `make test-*` commands save to `logs/pytest_output.log`, which can be verbose. You are better
 off directly running `uv run pytest ...` with correct arguments
@@ -68,8 +82,11 @@ The project auto-detects Docker vs Podman and adjusts commands accordingly. Podm
 
 ### Testing Strategy
 Tests are organized by size/scope:
-- **Small**: Unit tests, fast execution
-- **Medium**: Integration tests with external dependencies
+- **Small**: Unit tests, fast execution, no external dependencies
+- **Medium**: Integration tests with database dependencies (uses test DB on port 5433)
 - **Large**: End-to-end tests, full system testing
+
+The medium and full test suites require a test database which runs in a separate PostgreSQL container
+on port 5433 to avoid conflicts with the development database (port 5432).
 
 All tests use pytest with asyncio support and coverage reporting.

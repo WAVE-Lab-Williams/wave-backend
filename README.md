@@ -44,6 +44,9 @@ FastAPI backend for the WAVE lab with PostgreSQL database support.
 - `make serve` - Start FastAPI development server
 - `make dev` - Start database and server together
 - `make dev-stop` - Stop development environment
+- `make shutdown` - Complete shutdown (stops all services, databases, and containers)
+
+**Note:** Use `make shutdown` when you want to completely stop all development services, including the FastAPI server, all databases, Docker/Podman containers, and (if using Podman) the Podman machine itself.
 
 ### Database Management
 - `make dev-db` - Start development PostgreSQL database
@@ -54,6 +57,11 @@ FastAPI backend for the WAVE lab with PostgreSQL database support.
 ### Test Database
 - `make test-db` - Start test PostgreSQL database
 - `make test-db-stop` - Stop test database
+- `make test-db-reset` - Reset test database (removes all data)
+
+### Combined Database Management
+- `make db-stop` - Stop both development and test databases
+- `make db-reset` - Reset both databases (removes all data and restarts them)
 
 ### Docker/Podman Management
 - `make docker-up` - Start all services with Docker Compose
@@ -65,10 +73,12 @@ FastAPI backend for the WAVE lab with PostgreSQL database support.
 - `make docker-deep-clean` - Deep clean ALL Docker/Podman resources (with confirmation)
 
 ### Testing
-- `make test-small` - Run small tests
-- `make test-medium` - Run medium tests
+- `make test-small` - Run small tests (no database required)
+- `make test-medium` - Run medium tests (automatically starts test database)
 - `make test-large` - Run large tests
-- `make test-all` - Run all tests
+- `make test-all` - Run all tests (automatically starts test database)
+
+**Note:** Medium and full test suites require the test database. The `test-medium` and `test-all` commands will automatically start the test PostgreSQL database on port 5433.
 
 ### Code Quality
 - `make format` - Format code (isort, black, flake8, pylint)
