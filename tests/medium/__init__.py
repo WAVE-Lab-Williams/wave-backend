@@ -1,0 +1,1 @@
+"""Medium integration tests."""

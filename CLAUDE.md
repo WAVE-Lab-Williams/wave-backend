@@ -11,22 +11,6 @@ This is a FastAPI backend for the WAVE lab with PostgreSQL database support. The
 - uv for dependency management
 - Docker/Podman for containerized database services
 
-# PROJECT TODO
-
-We need a database API with the following
-- [x] CRUD operations for tables (each table = 1 experiment type)
-- [x] Each experiment table should always have a uuid column (auto generated and returned when a new experiment is created)
-- [x] Each experiment table should have a human readable text description
-- [x] Each experiment table needs to have a tags column that a user can add and query. Let's say 10 max tags, so the list column should be small
-- [x] Each experiment table needs to have a participant ID
-- [x] Each experiment table needs to support adding additional columns, with types defined by users
-- [x] A separate table of all available tags and a description. Also with CRUD
-- [x] A separate table of all other experiment types (so we can keep track of all experiment tables). Also with CRUD
-- [x] Unit tests for all of the above, on the local provisioned postgres instance (should also pass in CI)
-- [x] A query operation that gets the types of columns for a given experiment uuid or experiment type
-
-Use pydantic models as much as humanly possible. Calls to FastAPI Depends() is welcome
-
 ## Essential Commands
 
 ### Development Setup
