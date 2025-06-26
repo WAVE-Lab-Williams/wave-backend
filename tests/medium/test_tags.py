@@ -1,5 +1,7 @@
 """Simple tests for tag operations."""
 
+import time
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 
@@ -10,12 +12,13 @@ from wave_backend.api.main import app
 async def test_create_tag_api():
     """Test creating a tag via API."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        tag_data = {"name": "simple-api-tag", "description": "Tag created via API"}
+        timestamp = str(int(time.time() * 1000))
+        tag_data = {"name": f"simple-api-tag-{timestamp}", "description": "Tag created via API"}
         response = await client.post("/api/v1/tags/", json=tag_data)
 
         assert response.status_code == 200
         data = response.json()
-        assert data["name"] == "simple-api-tag"
+        assert data["name"] == f"simple-api-tag-{timestamp}"
         assert data["description"] == "Tag created via API"
         assert "id" in data
         assert "created_at" in data
@@ -26,7 +29,8 @@ async def test_get_tags_api():
     """Test getting tags via API."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         # Create a tag first
-        tag_data = {"name": "simple-list-tag", "description": "Tag for listing"}
+        timestamp = str(int(time.time() * 1000))
+        tag_data = {"name": f"simple-list-tag-{timestamp}", "description": "Tag for listing"}
         await client.post("/api/v1/tags/", json=tag_data)
 
         response = await client.get("/api/v1/tags/")
@@ -39,7 +43,8 @@ async def test_get_tags_api():
 async def test_create_duplicate_tag_api():
     """Test creating a duplicate tag via API."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        tag_data = {"name": "simple-duplicate-tag", "description": "First tag"}
+        timestamp = str(int(time.time() * 1000))
+        tag_data = {"name": f"simple-duplicate-tag-{timestamp}", "description": "First tag"}
         await client.post("/api/v1/tags/", json=tag_data)
 
         # Try to create duplicate

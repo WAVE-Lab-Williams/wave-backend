@@ -1,5 +1,7 @@
 """Simple tests for experiment operations."""
 
+import time
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 
@@ -11,17 +13,18 @@ async def test_create_experiment_api():
     """Test creating an experiment via API."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         # Create experiment type first
+        timestamp = str(int(time.time() * 1000))
         exp_type_data = {
-            "name": "simple-experiment-type",
+            "name": f"simple-experiment-type-{timestamp}",
             "description": "Test experiment type",
-            "table_name": "simple_experiment_table",
+            "table_name": f"simple_experiment_table_{timestamp}",
         }
         exp_type_response = await client.post("/api/v1/experiment-types/", json=exp_type_data)
         exp_type_id = exp_type_response.json()["id"]
 
         experiment_data = {
             "experiment_type_id": exp_type_id,
-            "participant_id": "simple-participant-001",
+            "participant_id": f"simple-participant-001-{timestamp}",
             "description": "Simple test experiment",
             "tags": ["simple-tag1", "simple-tag2"],
             "additional_data": {"test": True},
@@ -30,7 +33,7 @@ async def test_create_experiment_api():
 
         assert response.status_code == 200
         data = response.json()
-        assert data["participant_id"] == "simple-participant-001"
+        assert data["participant_id"] == f"simple-participant-001-{timestamp}"
         assert data["description"] == "Simple test experiment"
         assert data["tags"] == ["simple-tag1", "simple-tag2"]
         assert "uuid" in data
@@ -42,10 +45,11 @@ async def test_get_experiments_api():
     """Test getting experiments via API."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         # Create experiment type first
+        timestamp = str(int(time.time() * 1000))
         exp_type_data = {
-            "name": "simple-list-experiment-type",
+            "name": f"simple-list-experiment-type-{timestamp}",
             "description": "Test experiment type for listing",
-            "table_name": "simple_list_experiment_table",
+            "table_name": f"simple_list_experiment_table_{timestamp}",
         }
         exp_type_response = await client.post("/api/v1/experiment-types/", json=exp_type_data)
         exp_type_id = exp_type_response.json()["id"]
@@ -53,7 +57,7 @@ async def test_get_experiments_api():
         # Create an experiment
         experiment_data = {
             "experiment_type_id": exp_type_id,
-            "participant_id": "simple-list-participant",
+            "participant_id": f"simple-list-participant-{timestamp}",
             "description": "Experiment for listing",
         }
         await client.post("/api/v1/experiments/", json=experiment_data)
@@ -69,10 +73,11 @@ async def test_get_experiment_columns_api():
     """Test getting experiment columns via API."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         # Create experiment type first
+        timestamp = str(int(time.time() * 1000))
         exp_type_data = {
-            "name": "simple-columns-experiment-type",
+            "name": f"simple-columns-experiment-type-{timestamp}",
             "description": "Test experiment type for columns",
-            "table_name": "simple_columns_experiment_table",
+            "table_name": f"simple_columns_experiment_table_{timestamp}",
         }
         exp_type_response = await client.post("/api/v1/experiment-types/", json=exp_type_data)
         exp_type_id = exp_type_response.json()["id"]
@@ -80,7 +85,7 @@ async def test_get_experiment_columns_api():
         # Create an experiment
         experiment_data = {
             "experiment_type_id": exp_type_id,
-            "participant_id": "simple-columns-participant",
+            "participant_id": f"simple-columns-participant-{timestamp}",
             "description": "Experiment for column testing",
         }
         create_response = await client.post("/api/v1/experiments/", json=experiment_data)

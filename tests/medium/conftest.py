@@ -1,12 +1,10 @@
 import os
 
 import pytest
-from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from wave_backend.api.main import app
 from wave_backend.models.database import Base, get_db
-from wave_backend.models.models import Experiment, ExperimentType, Tag
 
 # Test database URL - uses test database on port 5433
 TEST_DATABASE_URL = os.getenv(
@@ -51,6 +49,28 @@ def setup_test_database():
         test_engine = create_async_engine(TEST_DATABASE_URL, echo=False)
         async with test_engine.begin() as conn:
             await conn.run_sync(Base.metadata.drop_all)
+        await test_engine.dispose()
+
+    asyncio.run(cleanup())
+
+
+@pytest.fixture(autouse=True)
+def clean_database_between_tests():
+    """Clean database between each test to avoid conflicts."""
+    import asyncio
+
+    yield  # Run test first
+
+    # Clean up after each test
+    async def cleanup():
+        test_engine = create_async_engine(TEST_DATABASE_URL, echo=False)
+        async with test_engine.begin() as conn:
+            from sqlalchemy import text
+
+            # Clean data but keep tables
+            await conn.execute(text("TRUNCATE TABLE experiments RESTART IDENTITY CASCADE"))
+            await conn.execute(text("TRUNCATE TABLE experiment_types RESTART IDENTITY CASCADE"))
+            await conn.execute(text("TRUNCATE TABLE tags RESTART IDENTITY CASCADE"))
         await test_engine.dispose()
 
     asyncio.run(cleanup())
