@@ -26,7 +26,14 @@ class ExperimentService:
         db.add(db_experiment)
         await db.commit()
         await db.refresh(db_experiment)
-        return db_experiment
+
+        # Load the experiment_type relationship to avoid lazy loading issues during serialization
+        result = await db.execute(
+            select(Experiment)
+            .options(selectinload(Experiment.experiment_type))
+            .where(Experiment.uuid == db_experiment.uuid)
+        )
+        return result.scalar_one()
 
     @staticmethod
     async def get_experiment(db: AsyncSession, experiment_uuid: UUID) -> Optional[Experiment]:
@@ -79,7 +86,14 @@ class ExperimentService:
 
         await db.commit()
         await db.refresh(db_experiment)
-        return db_experiment
+
+        # Load the experiment_type relationship to avoid lazy loading issues during serialization
+        result = await db.execute(
+            select(Experiment)
+            .options(selectinload(Experiment.experiment_type))
+            .where(Experiment.uuid == db_experiment.uuid)
+        )
+        return result.scalar_one()
 
     @staticmethod
     async def delete_experiment(db: AsyncSession, experiment_uuid: UUID) -> bool:
@@ -110,12 +124,14 @@ class ExperimentService:
             return None
 
         # Get the table schema from the database
-        inspector = inspect(db.bind)
-
-        # For the base experiments table
         base_columns = []
         try:
-            columns_info = await db.run_sync(lambda sync_db: inspector.get_columns("experiments"))
+
+            def get_columns_sync(sync_conn):
+                inspector = inspect(sync_conn)
+                return inspector.get_columns("experiments")
+
+            columns_info = await db.run_sync(get_columns_sync)
             for col in columns_info:
                 base_columns.append(
                     ColumnTypeInfo(
