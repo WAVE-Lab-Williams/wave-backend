@@ -1,19 +1,24 @@
 """Single database test to debug issues."""
 
-from fastapi.testclient import TestClient
+import pytest
+from httpx import ASGITransport, AsyncClient
+
+from wave_backend.api.main import app
 
 
-def test_create_single_tag(test_client: TestClient):
+@pytest.mark.anyio
+async def test_create_single_tag():
     """Test creating a single tag via API."""
-    tag_data = {"name": "debug-tag", "description": "Tag for debugging"}
-    response = test_client.post("/api/v1/tags/", json=tag_data)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        tag_data = {"name": "debug-tag", "description": "Tag for debugging"}
+        response = await client.post("/api/v1/tags/", json=tag_data)
 
-    print(f"Response status: {response.status_code}")
-    print(f"Response body: {response.text}")
+        print(f"Response status: {response.status_code}")
+        print(f"Response body: {response.text}")
 
-    if response.status_code == 200:
-        data = response.json()
-        assert data["name"] == "debug-tag"
-        assert data["description"] == "Tag for debugging"
-        assert "id" in data
-        assert "created_at" in data
+        if response.status_code == 200:
+            data = response.json()
+            assert data["name"] == "debug-tag"
+            assert data["description"] == "Tag for debugging"
+            assert "id" in data
+            assert "created_at" in data

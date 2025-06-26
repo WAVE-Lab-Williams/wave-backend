@@ -35,6 +35,9 @@ make test-large        # Run large/end-to-end tests
 make test-all          # Run all test suites
 ```
 
+WARNING: `make test-*` commands save to `logs/pytest_output.log`, which can be verbose. You are better
+off directly running `uv run pytest ...` with correct arguments
+
 ### Code Quality
 ```bash
 make format            # Run isort, black, flake8, pylint
