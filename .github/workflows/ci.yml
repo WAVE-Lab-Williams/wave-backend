@@ -74,8 +74,7 @@ jobs:
       - name: Run all tests
         run: uv run pytest -rs -vv tests/
         env:
-          POSTGRES_HOST: localhost
-          POSTGRES_PORT: 5433
+          POSTGRES_TEST_PORT: 5433
           POSTGRES_USER: ${{ secrets.TEST_POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.TEST_POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.TEST_POSTGRES_DB }}
+          POSTGRES_TEST_DB: ${{ secrets.TEST_POSTGRES_DB }}
