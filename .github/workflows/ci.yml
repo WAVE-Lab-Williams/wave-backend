@@ -36,8 +36,8 @@ jobs:
       - name: Run pylint
         run: uv run pylint **/*.py
 
-  small-sized-tests:
-    name: "Small sized tests"
+  all-unit-tests:
+    name: "All unit tests"
     runs-on: ubuntu-latest
 
     services:
@@ -67,10 +67,12 @@ jobs:
         run: uv python install 3.12
 
       - name: Install dependencies
-        run: uv sync --extra test
+        run: |
+          uv venv
+          uv pip install -e .[test]
 
-      - name: Run small tests
-        run: uv run pytest -rs -vv tests/small/
+      - name: Run all tests
+        run: uv run pytest -rs -vv tests/
         env:
           POSTGRES_HOST: localhost
           POSTGRES_PORT: 5433
