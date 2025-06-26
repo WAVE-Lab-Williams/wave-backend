@@ -6,9 +6,20 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from wave_backend.api.main import app
 from wave_backend.models.database import Base, get_db
 
-# Test database URL - uses test database on port 5433
+# Test database configuration - builds URL from environment variables
+# These match the environment variables set in CI and can be overridden locally
+POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
+POSTGRES_PORT = os.getenv("POSTGRES_TEST_PORT", "5433")
+POSTGRES_USER = os.getenv("POSTGRES_USER", "wave_user")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "wave_password")
+POSTGRES_DB = os.getenv("POSTGRES_TEST_DB", "wave_test")
+
 TEST_DATABASE_URL = os.getenv(
-    "TEST_DATABASE_URL", "postgresql+asyncpg://wave_user:wave_password@localhost:5433/wave_test"
+    "TEST_DATABASE_URL",
+    (
+        "postgresql+asyncpg://"
+        f"{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
+    ),
 )
 
 
