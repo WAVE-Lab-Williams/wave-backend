@@ -210,6 +210,7 @@ Common validation errors:
 This API includes interactive Swagger documentation available at:
 - **Swagger UI**: `http://localhost:8000/docs`
 - **ReDoc**: `http://localhost:8000/redoc`
+- **OpenAPI**: `http://localhost:8000/openapi.json`
 
 The Swagger UI provides:
 - Interactive forms with example data

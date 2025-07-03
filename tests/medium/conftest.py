@@ -1,6 +1,7 @@
 import os
 
 import pytest
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from wave_backend.api.main import app
@@ -85,3 +86,13 @@ def clean_database_between_tests():
         await test_engine.dispose()
 
     asyncio.run(cleanup())
+
+
+@pytest.fixture
+async def async_client():
+    """Provide an async HTTP client for testing the API."""
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test",
+    ) as client:
+        yield client
