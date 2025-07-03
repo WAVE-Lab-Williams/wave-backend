@@ -11,6 +11,10 @@ This is a FastAPI backend for the WAVE lab with PostgreSQL database support. The
 - uv for dependency management
 - Docker/Podman for containerized database services
 
+### Documentation
+
+After API changes it is essential to update `docs/api-usage.md` to keep documentation up to date
+
 ## Essential Commands
 
 ### Development Setup

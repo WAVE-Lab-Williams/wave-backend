@@ -90,7 +90,6 @@ Once you have experiment types defined, you can create individual experiment ins
 ```json
 {
   "experiment_type_id": 1,
-  "participant_id": "SUBJ-2024-001",
   "description": "Cognitive assessment with visual stimuli for participant 001",
   "tags": ["cognitive", "visual", "attention"],
   "additional_data": {

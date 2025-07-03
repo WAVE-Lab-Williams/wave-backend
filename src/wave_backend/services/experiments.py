@@ -51,7 +51,6 @@ class ExperimentService:
         skip: int = 0,
         limit: int = 100,
         experiment_type_id: Optional[int] = None,
-        participant_id: Optional[str] = None,
         tags: Optional[List[str]] = None,
     ) -> List[Experiment]:
         """Get experiments with optional filtering."""
@@ -59,9 +58,6 @@ class ExperimentService:
 
         if experiment_type_id:
             query = query.where(Experiment.experiment_type_id == experiment_type_id)
-
-        if participant_id:
-            query = query.where(Experiment.participant_id == participant_id)
 
         if tags:
             for tag in tags:

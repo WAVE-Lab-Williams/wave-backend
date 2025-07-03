@@ -28,7 +28,6 @@ async def test_experiment_data_full_crud_workflow(async_client):
     # Setup: Create experiment
     experiment_data = {
         "experiment_type_id": exp_type_id,
-        "participant_id": f"test-participant-{timestamp}",
         "description": "Test experiment for data CRUD",
         "tags": ["crud-test", "data-test"],
     }

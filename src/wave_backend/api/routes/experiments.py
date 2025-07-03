@@ -42,7 +42,6 @@ async def get_experiments(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     experiment_type_id: Optional[int] = Query(None),
-    participant_id: Optional[str] = Query(None),
     tags: Optional[List[str]] = Query(None),
     db: AsyncSession = Depends(get_db),
 ):
@@ -52,7 +51,6 @@ async def get_experiments(
         skip=skip,
         limit=limit,
         experiment_type_id=experiment_type_id,
-        participant_id=participant_id,
         tags=tags,
     )
     return experiments

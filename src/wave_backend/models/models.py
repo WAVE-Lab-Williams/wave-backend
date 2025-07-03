@@ -47,7 +47,6 @@ class Experiment(Base):
 
     uuid = Column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4, index=True)
     experiment_type_id = Column(Integer, ForeignKey("experiment_types.id"), nullable=False)
-    participant_id = Column(String(100), nullable=False, index=True)
     description = Column(Text, nullable=False)
     tags = Column(ARRAY(String(50)), nullable=True, default=list)
     additional_data = Column(JSON, nullable=True, default=dict)

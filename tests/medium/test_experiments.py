@@ -20,7 +20,6 @@ async def test_create_experiment_api(async_client):
 
     experiment_data = {
         "experiment_type_id": exp_type_id,
-        "participant_id": f"simple-participant-001-{timestamp}",
         "description": "Simple test experiment",
         "tags": ["simple-tag1", "simple-tag2"],
         "additional_data": {"test": True},
@@ -29,7 +28,6 @@ async def test_create_experiment_api(async_client):
 
     assert response.status_code == 200
     data = response.json()
-    assert data["participant_id"] == f"simple-participant-001-{timestamp}"
     assert data["description"] == "Simple test experiment"
     assert data["tags"] == ["simple-tag1", "simple-tag2"]
     assert "uuid" in data
@@ -52,7 +50,6 @@ async def test_get_experiments_api(async_client):
     # Create an experiment
     experiment_data = {
         "experiment_type_id": exp_type_id,
-        "participant_id": f"simple-list-participant-{timestamp}",
         "description": "Experiment for listing",
     }
     await async_client.post("/api/v1/experiments/", json=experiment_data)
@@ -79,7 +76,6 @@ async def test_get_experiment_columns_api(async_client):
     # Create an experiment
     experiment_data = {
         "experiment_type_id": exp_type_id,
-        "participant_id": f"simple-columns-participant-{timestamp}",
         "description": "Experiment for column testing",
     }
     create_response = await async_client.post("/api/v1/experiments/", json=experiment_data)

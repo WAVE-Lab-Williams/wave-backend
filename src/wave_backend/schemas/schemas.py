@@ -167,12 +167,6 @@ class ExperimentTypeResponse(ExperimentTypeBase):
 class ExperimentBase(BaseModel):
     """Base schema for experiments."""
 
-    participant_id: str = Field(
-        ...,
-        max_length=100,
-        description="Unique identifier for the participant",
-        examples=["PART-001", "STUDENT-12345", "VOLUNTEER-789", "SUBJ-2024-001"],
-    )
     description: str = Field(
         ...,
         description="Human readable description of what this experiment involves",
@@ -219,9 +213,6 @@ class ExperimentCreate(ExperimentBase):
 class ExperimentUpdate(BaseModel):
     """Schema for updating experiments."""
 
-    participant_id: Optional[str] = Field(
-        None, max_length=100, description="Participant identifier"
-    )
     description: Optional[str] = Field(None, description="Human readable experiment description")
     tags: Optional[List[str]] = Field(None, max_length=10, description="List of tags (max 10)")
     additional_data: Optional[Dict[str, Any]] = Field(
