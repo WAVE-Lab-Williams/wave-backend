@@ -228,7 +228,7 @@ endif
 define run_tests
 	@mkdir -p logs
 		uv run coverage run --data-file=logs/.coverage --source=${SOURCE_DIR} --omit="*/tests/*" \
-		-m pytest -rs -vv --log-level=${PYTEST_LOG_LEVEL} $1 \
+		-m pytest -rs -vv --log-level=${PYTEST_LOG_LEVEL} $1 --durations 5 \
 		> logs/pytest_output.log
 endef
 
