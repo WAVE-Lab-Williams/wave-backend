@@ -25,7 +25,7 @@ class ExperimentTypeService:
 
         # Create the dynamic table for this experiment type
         table_created = await ExperimentDataService.create_experiment_table(
-            db_experiment_type.table_name, db_experiment_type.schema_definition
+            db_experiment_type.table_name, db_experiment_type.schema_definition, db
         )
 
         if not table_created:
@@ -88,7 +88,7 @@ class ExperimentTypeService:
 
         # Drop the dynamic table first
         table_name = db_experiment_type.table_name
-        await ExperimentDataService.drop_experiment_table(table_name)
+        await ExperimentDataService.drop_experiment_table(table_name, db)
 
         await db.delete(db_experiment_type)
         await db.commit()

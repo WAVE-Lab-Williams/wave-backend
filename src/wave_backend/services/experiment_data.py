@@ -1,6 +1,6 @@
 """Service for managing experiment data with dynamic tables."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import (
@@ -14,11 +14,15 @@ from sqlalchemy import (
     String,
     Table,
     Text,
+    func,
 )
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import delete, insert, select, text, update
 
-from wave_backend.models.database import engine
+from wave_backend.utils.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 class ExperimentDataService:
@@ -37,7 +41,7 @@ class ExperimentDataService:
 
     @classmethod
     async def create_experiment_table(
-        cls, table_name: str, schema_definition: Dict[str, Any]
+        cls, table_name: str, schema_definition: Dict[str, Any], db: AsyncSession
     ) -> bool:
         """Create a dynamic table for experiment data."""
         try:
@@ -76,70 +80,92 @@ class ExperimentDataService:
             # Create the table
             Table(table_name, metadata, *columns)
 
-            async with engine.begin() as conn:
-                await conn.run_sync(metadata.create_all)
+            # Use the provided database session's connection
+            connection = await db.connection()
+            await connection.run_sync(metadata.create_all)
+
+            # Commit the transaction to ensure the table is persisted
+            await db.commit()
 
             return True
 
         except SQLAlchemyError as e:
-            print(f"Error creating table {table_name}: {e}")
+            logger.error(f"Error creating table {table_name}: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"Unexpected error creating table {table_name}: {e}")
             return False
 
     @classmethod
-    async def drop_experiment_table(cls, table_name: str) -> bool:
+    async def drop_experiment_table(cls, table_name: str, db: AsyncSession) -> bool:
         """Drop a dynamic experiment table."""
         try:
-            async with engine.begin() as conn:
-                await conn.execute(text(f"DROP TABLE IF EXISTS {table_name}"))
+            # Use the provided database session's connection
+            await db.execute(text(f"DROP TABLE IF EXISTS {table_name}"))
+            await db.commit()
             return True
         except SQLAlchemyError as e:
-            print(f"Error dropping table {table_name}: {e}")
+            logger.error(f"Error dropping table {table_name}: {e}")
             return False
 
     @classmethod
-    async def get_table_reflected(cls, table_name: str) -> Optional[Table]:
+    async def get_table_reflected(cls, table_name: str, db: AsyncSession) -> Optional[Table]:
         """Get a reflected table object for ORM operations."""
         try:
             metadata = MetaData()
-            async with engine.connect() as conn:
-                await conn.run_sync(metadata.reflect, only=[table_name])
+            # Use the provided database session's connection
+            connection = await db.connection()
+            await connection.run_sync(metadata.reflect, only=[table_name])
             return metadata.tables.get(table_name)
         except SQLAlchemyError:
             return None
 
     @classmethod
     async def insert_data_row(
-        cls, table_name: str, participant_id: str, data: Dict[str, Any]
+        cls, table_name: str, participant_id: str, data: Dict[str, Any], db: AsyncSession
     ) -> Optional[int]:
         """Insert a data row into an experiment table."""
         try:
-            table = await cls.get_table_reflected(table_name)
-            if not table:
+            table = await cls.get_table_reflected(table_name, db)
+            if table is None:
                 return None
 
             # Ensure participant_id is included
             data["participant_id"] = participant_id
 
-            # Filter out any columns that don't exist in the table
+            # Check for columns that don't exist in the table
+            missing_columns = []
             valid_data = {}
             for key, value in data.items():
                 if key in table.columns:
                     valid_data[key] = value
+                else:
+                    missing_columns.append(key)
 
-            async with engine.begin() as conn:
-                result = await conn.execute(
-                    insert(table).values(**valid_data).returning(table.c.id)
+            # If there are missing columns, raise an error
+            if missing_columns:
+                raise ValueError(
+                    f"Unknown columns: {missing_columns}. "
+                    "Please update the experiment type schema to include these columns."
                 )
-                return result.scalar()
+
+            # Use the provided database session
+            result = await db.execute(insert(table).values(**valid_data).returning(table.c.id))
+            await db.commit()
+            return result.scalar()
 
         except SQLAlchemyError as e:
-            print(f"Error inserting data into {table_name}: {e}")
+            logger.error(f"Error inserting data into {table_name}: {e}")
             return None
+        except ValueError as e:
+            logger.error(f"Error inserting data into {table_name}: {e}")
+            raise
 
     @classmethod
     async def get_data_rows(
         cls,
         table_name: str,
+        db: AsyncSession,
         participant_id: Optional[str] = None,
         filters: Optional[Dict[str, Any]] = None,
         created_after: Optional[datetime] = None,
@@ -149,8 +175,8 @@ class ExperimentDataService:
     ) -> List[Dict[str, Any]]:
         """Get data rows from an experiment table with ORM-style filtering."""
         try:
-            table = await cls.get_table_reflected(table_name)
-            if not table:
+            table = await cls.get_table_reflected(table_name, db)
+            if table is None:
                 return []
 
             query = select(table)
@@ -173,39 +199,43 @@ class ExperimentDataService:
             # Order by created_at descending and apply pagination
             query = query.order_by(table.c.created_at.desc()).limit(limit).offset(offset)
 
-            async with engine.connect() as conn:
-                result = await conn.execute(query)
-                return [dict(row._mapping) for row in result]
+            # Use the provided database session
+            result = await db.execute(query)
+            return [dict(row._mapping) for row in result]
 
         except SQLAlchemyError as e:
-            print(f"Error querying data from {table_name}: {e}")
+            logger.error(f"Error querying data from {table_name}: {e}")
             return []
 
     @classmethod
-    async def get_data_row_by_id(cls, table_name: str, row_id: int) -> Optional[Dict[str, Any]]:
+    async def get_data_row_by_id(
+        cls, table_name: str, row_id: int, db: AsyncSession
+    ) -> Optional[Dict[str, Any]]:
         """Get a single data row by ID."""
         try:
-            table = await cls.get_table_reflected(table_name)
-            if not table:
+            table = await cls.get_table_reflected(table_name, db)
+            if table is None:
                 return None
 
             query = select(table).where(table.c.id == row_id)
 
-            async with engine.connect() as conn:
-                result = await conn.execute(query)
-                row = result.first()
-                return dict(row._mapping) if row else None
+            # Use the provided database session
+            result = await db.execute(query)
+            row = result.first()
+            return dict(row._mapping) if row else None
 
         except SQLAlchemyError as e:
-            print(f"Error getting data row from {table_name}: {e}")
+            logger.error(f"Error getting data row from {table_name}: {e}")
             return None
 
     @classmethod
-    async def update_data_row(cls, table_name: str, row_id: int, data: Dict[str, Any]) -> bool:
+    async def update_data_row(
+        cls, table_name: str, row_id: int, data: Dict[str, Any], db: AsyncSession
+    ) -> bool:
         """Update a data row in an experiment table."""
         try:
-            table = await cls.get_table_reflected(table_name)
-            if not table:
+            table = await cls.get_table_reflected(table_name, db)
+            if table is None:
                 return False
 
             # Don't allow updating id, created_at
@@ -218,42 +248,44 @@ class ExperimentDataService:
                 return False
 
             # Add updated_at
-            valid_data["updated_at"] = datetime.utcnow()
+            valid_data["updated_at"] = datetime.now(UTC).replace(tzinfo=None)
 
             query = update(table).where(table.c.id == row_id).values(**valid_data)
 
-            async with engine.begin() as conn:
-                result = await conn.execute(query)
-                return result.rowcount > 0
+            # Use the provided database session
+            result = await db.execute(query)
+            await db.commit()
+            return result.rowcount > 0
 
         except SQLAlchemyError as e:
-            print(f"Error updating data in {table_name}: {e}")
+            logger.error(f"Error updating data in {table_name}: {e}")
             return False
 
     @classmethod
-    async def delete_data_row(cls, table_name: str, row_id: int) -> bool:
+    async def delete_data_row(cls, table_name: str, row_id: int, db: AsyncSession) -> bool:
         """Delete a data row from an experiment table."""
         try:
-            table = await cls.get_table_reflected(table_name)
-            if not table:
+            table = await cls.get_table_reflected(table_name, db)
+            if table is None:
                 return False
 
             query = delete(table).where(table.c.id == row_id)
 
-            async with engine.begin() as conn:
-                result = await conn.execute(query)
-                return result.rowcount > 0
+            # Use the provided database session
+            result = await db.execute(query)
+            await db.commit()
+            return result.rowcount > 0
 
         except SQLAlchemyError as e:
-            print(f"Error deleting data from {table_name}: {e}")
+            logger.error(f"Error deleting data from {table_name}: {e}")
             return False
 
     @classmethod
-    async def get_table_columns(cls, table_name: str) -> List[Dict[str, Any]]:
+    async def get_table_columns(cls, table_name: str, db: AsyncSession) -> List[Dict[str, Any]]:
         """Get column information for a table."""
         try:
-            table = await cls.get_table_reflected(table_name)
-            if not table:
+            table = await cls.get_table_reflected(table_name, db)
+            if table is None:
                 return []
 
             columns = []
@@ -275,16 +307,17 @@ class ExperimentDataService:
     async def count_data_rows(
         cls,
         table_name: str,
+        db: AsyncSession,
         participant_id: Optional[str] = None,
         filters: Optional[Dict[str, Any]] = None,
     ) -> int:
         """Count data rows in an experiment table."""
         try:
-            table = await cls.get_table_reflected(table_name)
-            if not table:
+            table = await cls.get_table_reflected(table_name, db)
+            if table is None:
                 return 0
 
-            query = select(table.c.id.label("count")).select_from(table)
+            query = select(func.count(table.c.id)).select_from(table)
 
             # Apply filters
             if participant_id:
@@ -295,10 +328,10 @@ class ExperimentDataService:
                     if key in table.columns:
                         query = query.where(table.c[key] == value)
 
-            async with engine.connect() as conn:
-                result = await conn.execute(query)
-                return len(result.fetchall())
+            # Use the provided database session
+            result = await db.execute(query)
+            return result.scalar()
 
         except SQLAlchemyError as e:
-            print(f"Error counting data rows in {table_name}: {e}")
+            logger.error(f"Error counting data rows in {table_name}: {e}")
             return 0

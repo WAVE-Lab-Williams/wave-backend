@@ -8,12 +8,18 @@ import pytest
 @pytest.mark.anyio
 async def test_experiment_data_full_crud_workflow(async_client):
     """Test complete CRUD workflow for experiment data."""
-    # Setup: Create simple experiment type without custom schema to avoid DB conflicts
+    # Setup: Create experiment type with schema that matches the test data
     timestamp = str(int(time.time() * 1000))
     exp_type_data = {
         "name": f"test-experiment-type-{timestamp}",
         "description": "Test experiment type for CRUD testing",
         "table_name": f"test_experiment_table_{timestamp}",
+        "schema_definition": {
+            "test_value": "STRING",
+            "number": "INTEGER",
+            "value": "STRING",
+            "count": "INTEGER",
+        },
     }
     exp_type_response = await async_client.post("/api/v1/experiment-types/", json=exp_type_data)
     assert exp_type_response.status_code == 200
@@ -41,7 +47,7 @@ async def test_experiment_data_full_crud_workflow(async_client):
     create_response = await async_client.post(
         f"/api/v1/experiment-data/{experiment_uuid}/data/", json=create_data
     )
-    assert create_response.status_code == 200
+    assert create_response.status_code == 201
     created_data = create_response.json()
     assert created_data["participant_id"] == f"test-participant-{timestamp}"
     assert created_data["test_value"] == "some test data"
@@ -52,7 +58,7 @@ async def test_experiment_data_full_crud_workflow(async_client):
 
     # Test 2: Get specific experiment data row
     get_response = await async_client.get(
-        f"/api/v1/experiment-data/{experiment_uuid}/data/{row_id}"
+        f"/api/v1/experiment-data/{experiment_uuid}/data/row/{row_id}"
     )
     assert get_response.status_code == 200
     retrieved_data = get_response.json()
@@ -70,7 +76,7 @@ async def test_experiment_data_full_crud_workflow(async_client):
         },
     }
     update_response = await async_client.put(
-        f"/api/v1/experiment-data/{experiment_uuid}/data/{row_id}", json=update_data
+        f"/api/v1/experiment-data/{experiment_uuid}/data/row/{row_id}", json=update_data
     )
     assert update_response.status_code == 200
     updated_data = update_response.json()
@@ -94,7 +100,7 @@ async def test_experiment_data_full_crud_workflow(async_client):
         response = await async_client.post(
             f"/api/v1/experiment-data/{experiment_uuid}/data/", json=data
         )
-        assert response.status_code == 200
+        assert response.status_code == 201
         additional_ids.append(response.json()["id"])
 
     # Test 5: Get all experiment data
@@ -155,14 +161,14 @@ async def test_experiment_data_full_crud_workflow(async_client):
 
     # Test 11: Delete experiment data
     delete_response = await async_client.delete(
-        f"/api/v1/experiment-data/{experiment_uuid}/data/{row_id}"
+        f"/api/v1/experiment-data/{experiment_uuid}/data/row/{row_id}"
     )
     assert delete_response.status_code == 200
     assert delete_response.json()["message"] == "Experiment data row deleted successfully"
 
     # Test 12: Verify deletion
     get_deleted_response = await async_client.get(
-        f"/api/v1/experiment-data/{experiment_uuid}/data/{row_id}"
+        f"/api/v1/experiment-data/{experiment_uuid}/data/row/{row_id}"
     )
     assert get_deleted_response.status_code == 404
 

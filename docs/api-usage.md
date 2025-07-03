@@ -106,7 +106,7 @@ Once you have experiment types defined, you can create individual experiment ins
 
 Once you have created experiments, you can add actual data rows to the experiment's custom table.
 
-**POST `/api/v1/experiment-types/{experiment_type_id}/data/`**
+**POST `/api/v1/experiment-data/{experiment_id}/data/`**
 
 ```json
 {
@@ -124,7 +124,7 @@ This creates a new row in the experiment type's data table with the custom colum
 
 **Get Experiment Data**
 
-**GET `/api/v1/experiment-types/{experiment_type_id}/data/`**
+**GET `/api/v1/experiment-data/{experiment_id}/data/`**
 
 Supports filtering by:
 - `participant_id` - Filter by participant  
@@ -134,7 +134,7 @@ Supports filtering by:
 
 **Update Experiment Data**
 
-**PUT `/api/v1/experiment-types/{experiment_type_id}/data/{row_id}`**
+**PUT `/api/v1/experiment-data/{experiment_id}/data/row/{row_id}`**
 
 ```json
 {
@@ -148,7 +148,7 @@ Supports filtering by:
 
 **Query Experiment Data**
 
-**POST `/api/v1/experiment-types/{experiment_type_id}/data/query`**
+**POST `/api/v1/experiment-data/{experiment_id}/data/query`**
 
 ```json
 {
@@ -247,8 +247,8 @@ Here's a complete workflow for a memory study:
 5. **Query Results:**
    - Get all memory experiments: `GET /api/v1/experiments/?tags=memory`
    - Get specific participant data: `GET /api/v1/experiments/?participant_id=MEM-STUDY-001`
-   - Get experiment data: `GET /api/v1/experiment-types/1/data/?participant_id=MEM-STUDY-001`
-   - Query data with filters: `POST /api/v1/experiment-types/1/data/query` with custom filters
+   - Get experiment data: `GET /api/v1/experiment-data/{experiment_id}/data/?participant_id=MEM-STUDY-001`
+   - Query data with filters: `POST /api/v1/experiment-data/{experiment_id}/data/query` with custom filters
    - Get schema info: `GET /api/v1/experiments/{uuid}/columns`
 
 </details>

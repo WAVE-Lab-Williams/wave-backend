@@ -63,16 +63,19 @@ async def create_experiment_data(
         raise HTTPException(status_code=404, detail="Experiment not found")
 
     # Insert the data row
-    row_id = await ExperimentDataService.insert_data_row(
-        experiment.experiment_type.table_name, data.participant_id, data.data
-    )
+    try:
+        row_id = await ExperimentDataService.insert_data_row(
+            experiment.experiment_type.table_name, data.participant_id, data.data, db
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     if row_id is None:
         raise HTTPException(status_code=400, detail="Failed to create experiment data row")
 
     # Return the created row
     row = await ExperimentDataService.get_data_row_by_id(
-        experiment.experiment_type.table_name, row_id
+        experiment.experiment_type.table_name, row_id, db
     )
     return row
 
@@ -137,6 +140,7 @@ async def get_experiment_data(
     # Get the data rows
     rows = await ExperimentDataService.get_data_rows(
         experiment.experiment_type.table_name,
+        db,
         participant_id=participant_id,
         created_after=created_after,
         created_before=created_before,
@@ -148,7 +152,70 @@ async def get_experiment_data(
 
 
 @router.get(
-    "/{experiment_id}/data/{row_id}",
+    "/{experiment_id}/data/count",
+    response_model=ExperimentDataCountResponse,
+    summary="Count experiment data rows",
+    description="Get the total count of experiment data rows, "
+    "optionally filtered by participant ID.",
+)
+async def count_experiment_data(
+    experiment_id: UUID,
+    participant_id: Optional[str] = Query(None, description="Filter by participant ID"),
+    db: AsyncSession = Depends(get_db),
+):
+    """Count experiment data rows with optional participant filtering."""
+    # Get the experiment to get the table name
+    experiment = await ExperimentService.get_experiment(db, experiment_id)
+    if not experiment:
+        raise HTTPException(status_code=404, detail="Experiment not found")
+
+    # Count the rows
+    count = await ExperimentDataService.count_data_rows(
+        experiment.experiment_type.table_name, db, participant_id=participant_id
+    )
+
+    return ExperimentDataCountResponse(
+        count=count,
+        participant_id=participant_id,
+        experiment_id=experiment_id,
+    )
+
+
+@router.get(
+    "/{experiment_id}/data/columns",
+    response_model=List[ColumnTypeInfo],
+    summary="Get experiment data columns",
+    description="Retrieve detailed information about all columns in the experiment's data table, "
+    "including data types, nullable status, and default values.",
+)
+async def get_experiment_data_columns(
+    experiment_id: UUID,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get detailed column information for an experiment's data table schema."""
+    # Get the experiment to get the table name
+    experiment = await ExperimentService.get_experiment(db, experiment_id)
+    if not experiment:
+        raise HTTPException(status_code=404, detail="Experiment not found")
+
+    # Get column information
+    columns = await ExperimentDataService.get_table_columns(
+        experiment.experiment_type.table_name, db
+    )
+
+    return [
+        ColumnTypeInfo(
+            column_name=col["column_name"],
+            column_type=col["column_type"],
+            is_nullable=col["is_nullable"],
+            default_value=col["default_value"],
+        )
+        for col in columns
+    ]
+
+
+@router.get(
+    "/{experiment_id}/data/row/{row_id}",
     response_model=Dict[str, Any],
     summary="Get experiment data row",
     description="Retrieve a specific experiment data row by its ID. "
@@ -187,7 +254,7 @@ async def get_experiment_data_row(
 
     # Get the data row
     row = await ExperimentDataService.get_data_row_by_id(
-        experiment.experiment_type.table_name, row_id
+        experiment.experiment_type.table_name, row_id, db
     )
 
     if not row:
@@ -197,7 +264,7 @@ async def get_experiment_data_row(
 
 
 @router.put(
-    "/{experiment_id}/data/{row_id}",
+    "/{experiment_id}/data/row/{row_id}",
     response_model=Dict[str, Any],
     summary="Update experiment data row",
     description="Update a specific experiment data row with new values. "
@@ -244,7 +311,7 @@ async def update_experiment_data(
 
     # Update the data row
     success = await ExperimentDataService.update_data_row(
-        experiment.experiment_type.table_name, row_id, update_data
+        experiment.experiment_type.table_name, row_id, update_data, db
     )
 
     if not success:
@@ -252,13 +319,13 @@ async def update_experiment_data(
 
     # Return the updated row
     row = await ExperimentDataService.get_data_row_by_id(
-        experiment.experiment_type.table_name, row_id
+        experiment.experiment_type.table_name, row_id, db
     )
     return row
 
 
 @router.delete(
-    "/{experiment_id}/data/{row_id}",
+    "/{experiment_id}/data/row/{row_id}",
     response_model=ExperimentDataDeleteResponse,
     summary="Delete experiment data row",
     description="Delete a specific experiment data row by its ID.",
@@ -276,7 +343,7 @@ async def delete_experiment_data(
 
     # Delete the data row
     success = await ExperimentDataService.delete_data_row(
-        experiment.experiment_type.table_name, row_id
+        experiment.experiment_type.table_name, row_id, db
     )
 
     if not success:
@@ -287,37 +354,6 @@ async def delete_experiment_data(
         deleted_id=row_id,
         experiment_id=experiment_id,
     )
-
-
-@router.get(
-    "/{experiment_id}/data/columns",
-    response_model=List[ColumnTypeInfo],
-    summary="Get experiment data columns",
-    description="Retrieve detailed information about all columns in the experiment's data table, "
-    "including data types, nullable status, and default values.",
-)
-async def get_experiment_data_columns(
-    experiment_id: UUID,
-    db: AsyncSession = Depends(get_db),
-):
-    """Get detailed column information for an experiment's data table schema."""
-    # Get the experiment to get the table name
-    experiment = await ExperimentService.get_experiment(db, experiment_id)
-    if not experiment:
-        raise HTTPException(status_code=404, detail="Experiment not found")
-
-    # Get column information
-    columns = await ExperimentDataService.get_table_columns(experiment.experiment_type.table_name)
-
-    return [
-        ColumnTypeInfo(
-            column_name=col["column_name"],
-            column_type=col["column_type"],
-            is_nullable=col["is_nullable"],
-            default_value=col["default_value"],
-        )
-        for col in columns
-    ]
 
 
 @router.post(
@@ -381,6 +417,7 @@ async def query_experiment_data(
     # Run the query
     rows = await ExperimentDataService.get_data_rows(
         experiment.experiment_type.table_name,
+        db,
         participant_id=participant_id,
         filters=filters,
         created_after=created_after,
@@ -390,33 +427,3 @@ async def query_experiment_data(
     )
 
     return rows
-
-
-@router.get(
-    "/{experiment_id}/data/count",
-    response_model=ExperimentDataCountResponse,
-    summary="Count experiment data rows",
-    description="Get the total count of experiment data rows, "
-    "optionally filtered by participant ID.",
-)
-async def count_experiment_data(
-    experiment_id: UUID,
-    participant_id: Optional[str] = Query(None, description="Filter by participant ID"),
-    db: AsyncSession = Depends(get_db),
-):
-    """Count experiment data rows with optional participant filtering."""
-    # Get the experiment to get the table name
-    experiment = await ExperimentService.get_experiment(db, experiment_id)
-    if not experiment:
-        raise HTTPException(status_code=404, detail="Experiment not found")
-
-    # Count the rows
-    count = await ExperimentDataService.count_data_rows(
-        experiment.experiment_type.table_name, participant_id=participant_id
-    )
-
-    return ExperimentDataCountResponse(
-        count=count,
-        participant_id=participant_id,
-        experiment_id=experiment_id,
-    )

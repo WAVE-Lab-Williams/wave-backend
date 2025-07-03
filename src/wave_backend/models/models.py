@@ -8,7 +8,7 @@ from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
-from .database import Base
+from wave_backend.models.database import Base
 
 
 class Tag(Base):
