@@ -44,11 +44,11 @@ app.include_router(tags.router, prefix="/api/v1")
 app.include_router(experiment_types.router, prefix="/api/v1")
 
 
-@app.get("/")
-async def hello_world():
-    """Hello world endpoint."""
-    logger.info("Hello world endpoint accessed")
-    return {"message": "Hello World from WAVE Backend!"}
+@app.get("/", summary="API Root", description="Welcome endpoint for the WAVE Backend API")
+async def root():
+    """API root endpoint providing welcome information."""
+    logger.info("API root endpoint accessed")
+    return {"message": "Welcome to the WAVE Backend API", "version": "0.1.0"}
 
 
 @app.get("/health")

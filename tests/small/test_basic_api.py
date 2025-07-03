@@ -10,8 +10,8 @@ def test_health_check_basic(test_client: TestClient):
     assert response.json()["status"] == "healthy"
 
 
-def test_hello_world_basic(test_client: TestClient):
-    """Test basic hello world endpoint."""
+def test_api_root_basic(test_client: TestClient):
+    """Test basic API root endpoint."""
     response = test_client.get("/")
     assert response.status_code == 200
-    assert "Hello World" in response.json()["message"]
+    assert "Welcome" in response.json()["message"]

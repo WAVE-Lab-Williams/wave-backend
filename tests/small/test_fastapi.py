@@ -5,11 +5,11 @@ Test module for FastAPI endpoints.
 from fastapi.testclient import TestClient
 
 
-def test_hello_world(test_client: TestClient):
-    """Test the hello world endpoint."""
+def test_api_root(test_client: TestClient):
+    """Test the API root endpoint."""
     response = test_client.get("/")
     assert response.status_code == 200
-    assert response.json() == {"message": "Hello World from WAVE Backend!"}
+    assert response.json() == {"message": "Welcome to the WAVE Backend API", "version": "0.1.0"}
 
 
 def test_health_check(test_client: TestClient):
