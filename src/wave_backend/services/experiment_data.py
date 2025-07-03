@@ -4,22 +4,19 @@ from datetime import UTC, datetime
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import (
-    JSON,
-    Boolean,
     Column,
     DateTime,
-    Float,
     Integer,
     MetaData,
     String,
     Table,
-    Text,
     func,
 )
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import delete, insert, select, text, update
 
+from wave_backend.schemas.column_types import TYPE_MAPPING
 from wave_backend.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -29,15 +26,6 @@ class ExperimentDataService:
     """Service for managing experiment data in dynamic tables using SQLAlchemy ORM."""
 
     # Map schema definition types to SQLAlchemy types
-    TYPE_MAPPING = {
-        "INTEGER": Integer,
-        "FLOAT": Float,
-        "STRING": String(255),
-        "TEXT": Text,
-        "BOOLEAN": Boolean,
-        "DATETIME": DateTime,
-        "JSON": JSON,
-    }
 
     @classmethod
     async def create_experiment_table(
@@ -62,8 +50,8 @@ class ExperimentDataService:
 
                 if isinstance(column_type, str):
                     column_type = column_type.upper()
-                    if column_type in cls.TYPE_MAPPING:
-                        columns.append(Column(column_name, cls.TYPE_MAPPING[column_type]))
+                    if column_type in TYPE_MAPPING:
+                        columns.append(Column(column_name, TYPE_MAPPING[column_type]))
                     else:
                         # Default to String if type not recognized
                         columns.append(Column(column_name, String(255)))
@@ -72,9 +60,9 @@ class ExperimentDataService:
                     col_type = column_type.get("type", "STRING").upper()
                     nullable = column_type.get("nullable", True)
 
-                    if col_type in cls.TYPE_MAPPING:
+                    if col_type in TYPE_MAPPING:
                         columns.append(
-                            Column(column_name, cls.TYPE_MAPPING[col_type], nullable=nullable)
+                            Column(column_name, TYPE_MAPPING[col_type], nullable=nullable)
                         )
 
             # Create the table

@@ -6,8 +6,10 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from wave_backend.schemas.column_types import TYPE_MAPPING
+
 # Supported column types for experiment data tables
-SUPPORTED_COLUMN_TYPES = ["INTEGER", "FLOAT", "STRING", "TEXT", "BOOLEAN", "DATETIME", "JSON"]
+SUPPORTED_COLUMN_TYPES = list(TYPE_MAPPING.keys())
 
 
 class ColumnDefinition(BaseModel):

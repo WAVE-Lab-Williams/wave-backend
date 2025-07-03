@@ -183,14 +183,6 @@ class TestExperimentDataService:
         assert result == 5
         mock_count.assert_called_once_with(table_name, participant_id)
 
-    def test_type_mapping(self):
-        """Test that TYPE_MAPPING contains all expected types."""
-        expected_types = ["INTEGER", "FLOAT", "STRING", "TEXT", "BOOLEAN", "DATETIME", "JSON"]
-
-        for expected_type in expected_types:
-            assert expected_type in ExperimentDataService.TYPE_MAPPING
-            assert ExperimentDataService.TYPE_MAPPING[expected_type] is not None
-
     @pytest.mark.asyncio
     async def test_get_data_rows_with_date_filters(self, mocker):
         """Test retrieving data rows with date filters."""

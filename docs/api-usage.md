@@ -296,10 +296,10 @@ Common validation errors:
 <details>
 <summary><strong>Interactive Documentation</strong></summary>
 
-This API includes interactive Swagger documentation available at:
-- **Swagger UI**: `http://localhost:8000/docs`
-- **ReDoc**: `http://localhost:8000/redoc`
-- **OpenAPI**: `http://localhost:8000/openapi.json`
+**Available Documentation Endpoints:**
+- `/docs` - Interactive Swagger UI
+- `/redoc` - Alternative ReDoc interface
+- `/openapi.json` - OpenAPI specification
 
 The Swagger UI provides:
 - Interactive forms with example data
