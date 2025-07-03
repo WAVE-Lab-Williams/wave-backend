@@ -7,7 +7,7 @@ from sqlalchemy import inspect, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from wave_backend.models.models import Experiment
+from wave_backend.models.models import Experiment, Tag
 from wave_backend.schemas.schemas import (
     ColumnTypeInfo,
     ExperimentColumnsResponse,
@@ -22,6 +22,15 @@ class ExperimentService:
     @staticmethod
     async def create_experiment(db: AsyncSession, experiment: ExperimentCreate) -> Experiment:
         """Create a new experiment."""
+        # Validate that all tags exist
+        if experiment.tags:
+            for tag_name in experiment.tags:
+                result = await db.execute(select(Tag).where(Tag.name == tag_name))
+                if not result.scalar_one_or_none():
+                    raise ValueError(
+                        f"Tag '{tag_name}' does not exist. Please create the tag first."
+                    )
+
         db_experiment = Experiment(**experiment.model_dump())
         db.add(db_experiment)
         await db.commit()
@@ -76,7 +85,16 @@ class ExperimentService:
         if not db_experiment:
             return None
 
+        # Validate that all tags exist if tags are being updated
         update_data = experiment_update.model_dump(exclude_unset=True)
+        if "tags" in update_data and update_data["tags"]:
+            for tag_name in update_data["tags"]:
+                result = await db.execute(select(Tag).where(Tag.name == tag_name))
+                if not result.scalar_one_or_none():
+                    raise ValueError(
+                        f"Tag '{tag_name}' does not exist. Please create the tag first."
+                    )
+
         for field, value in update_data.items():
             setattr(db_experiment, field, value)
 

@@ -214,7 +214,7 @@ Here's a complete workflow for a memory study:
    ]
    ```
 
-3. **Run Experiments:**
+3. **Create Experiments:**
    ```json
    {
      "experiment_type_id": 1,

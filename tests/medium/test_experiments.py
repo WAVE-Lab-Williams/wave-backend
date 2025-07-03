@@ -18,6 +18,12 @@ async def test_create_experiment_api(async_client):
     exp_type_response = await async_client.post("/api/v1/experiment-types/", json=exp_type_data)
     exp_type_id = exp_type_response.json()["id"]
 
+    # Create tags first (proper workflow)
+    tag_data_1 = {"name": "simple-tag1", "description": "Simple tag 1 for testing"}
+    tag_data_2 = {"name": "simple-tag2", "description": "Simple tag 2 for testing"}
+    await async_client.post("/api/v1/tags/", json=tag_data_1)
+    await async_client.post("/api/v1/tags/", json=tag_data_2)
+
     experiment_data = {
         "experiment_type_id": exp_type_id,
         "description": "Simple test experiment",
