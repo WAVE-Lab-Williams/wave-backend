@@ -42,12 +42,23 @@ Before creating experiments, you must define the experiment types that will be u
     "reaction_time": "FLOAT",
     "accuracy": "FLOAT", 
     "difficulty_level": "INTEGER",
-    "stimulus_type": "VARCHAR(50)"
+    "stimulus_type": "STRING"
   }
 }
 ```
 
 The `schema_definition` field allows you to specify additional columns that will be created for storing experiment-specific data.
+
+**Supported Column Types:**
+- `INTEGER` - Whole numbers
+- `FLOAT` - Decimal numbers  
+- `STRING` - Text (up to 255 characters)
+- `TEXT` - Long text
+- `BOOLEAN` - True/false values
+- `DATETIME` - Date and time values
+- `JSON` - JSON objects
+
+**Note:** When you create an experiment type, a dedicated database table is automatically created with your custom columns plus these required columns: `id`, `participant_id`, `created_at`, `updated_at`.
 
 ### Step 2: Create Tags (Optional)
 
@@ -91,7 +102,68 @@ Once you have experiment types defined, you can create individual experiment ins
 }
 ```
 
-### Step 4: Query and Manage Data
+### Step 4: Add Experiment Data
+
+Once you have created experiments, you can add actual data rows to the experiment's custom table.
+
+**POST `/api/v1/experiment-types/{experiment_type_id}/data/`**
+
+```json
+{
+  "participant_id": "SUBJ-2024-001",
+  "data": {
+    "reaction_time": 1.23,
+    "accuracy": 0.85,
+    "difficulty_level": 2,
+    "stimulus_type": "visual"
+  }
+}
+```
+
+This creates a new row in the experiment type's data table with the custom columns you defined.
+
+**Get Experiment Data**
+
+**GET `/api/v1/experiment-types/{experiment_type_id}/data/`**
+
+Supports filtering by:
+- `participant_id` - Filter by participant  
+- `created_after` - Filter by creation date (after)
+- `created_before` - Filter by creation date (before)
+- `limit` and `offset` - Pagination
+
+**Update Experiment Data**
+
+**PUT `/api/v1/experiment-types/{experiment_type_id}/data/{row_id}`**
+
+```json
+{
+  "participant_id": "SUBJ-2024-001",
+  "data": {
+    "reaction_time": 1.45,
+    "accuracy": 0.90
+  }
+}
+```
+
+**Query Experiment Data**
+
+**POST `/api/v1/experiment-types/{experiment_type_id}/data/query`**
+
+```json
+{
+  "participant_id": "SUBJ-2024-001",
+  "filters": {
+    "difficulty_level": 2,
+    "accuracy": 0.85
+  },
+  "created_after": "2024-01-01T00:00:00",
+  "limit": 100,
+  "offset": 0
+}
+```
+
+### Step 5: Query and Manage Experiments
 
 #### Get All Experiments
 **GET `/api/v1/experiments/`**
@@ -129,7 +201,7 @@ Here's a complete workflow for a memory study:
        "word_list_length": "INTEGER",
        "recall_accuracy": "FLOAT",
        "recall_time": "FLOAT",
-       "strategy_used": "VARCHAR(100)"
+       "strategy_used": "STRING"
      }
    }
    ```
@@ -159,9 +231,24 @@ Here's a complete workflow for a memory study:
    }
    ```
 
-4. **Query Results:**
+4. **Add Experiment Data:**
+   ```json
+   {
+     "participant_id": "MEM-STUDY-001",
+     "data": {
+       "word_list_length": 20,
+       "recall_accuracy": 0.75,
+       "recall_time": 45.2,
+       "strategy_used": "visualization"
+     }
+   }
+   ```
+
+5. **Query Results:**
    - Get all memory experiments: `GET /api/v1/experiments/?tags=memory`
    - Get specific participant data: `GET /api/v1/experiments/?participant_id=MEM-STUDY-001`
+   - Get experiment data: `GET /api/v1/experiment-types/1/data/?participant_id=MEM-STUDY-001`
+   - Query data with filters: `POST /api/v1/experiment-types/1/data/query` with custom filters
    - Get schema info: `GET /api/v1/experiments/{uuid}/columns`
 
 </details>
@@ -182,8 +269,10 @@ Here's a complete workflow for a memory study:
 
 ### Schema Design
 - Define custom columns in experiment type `schema_definition` for structured data
-- Use appropriate PostGres data types (`INTEGER`, `FLOAT`, `VARCHAR`, etc.)
+- Use appropriate data types: `INTEGER`, `FLOAT`, `STRING`, `TEXT`, `BOOLEAN`, `DATETIME`, `JSON`
 - Consider what data you'll need for analysis when designing schemas
+- Remember that each experiment type gets its own dedicated table for data storage
+- Always include participant_id when adding data rows - it's required for all experiment data
 
 </details>
 

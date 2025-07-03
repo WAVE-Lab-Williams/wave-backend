@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from wave_backend.models.models import ExperimentType
 from wave_backend.schemas.schemas import ExperimentTypeCreate, ExperimentTypeUpdate
+from wave_backend.services.experiment_data import ExperimentDataService
 
 
 class ExperimentTypeService:
@@ -16,11 +17,25 @@ class ExperimentTypeService:
     async def create_experiment_type(
         db: AsyncSession, experiment_type: ExperimentTypeCreate
     ) -> ExperimentType:
-        """Create a new experiment type."""
+        """Create a new experiment type and its corresponding data table."""
         db_experiment_type = ExperimentType(**experiment_type.model_dump())
         db.add(db_experiment_type)
         await db.commit()
         await db.refresh(db_experiment_type)
+
+        # Create the dynamic table for this experiment type
+        table_created = await ExperimentDataService.create_experiment_table(
+            db_experiment_type.table_name, db_experiment_type.schema_definition
+        )
+
+        if not table_created:
+            # If table creation fails, rollback the experiment type creation
+            await db.delete(db_experiment_type)
+            await db.commit()
+            raise RuntimeError(
+                f"Failed to create experiment data table: {db_experiment_type.table_name}"
+            )
+
         return db_experiment_type
 
     @staticmethod
@@ -66,10 +81,14 @@ class ExperimentTypeService:
 
     @staticmethod
     async def delete_experiment_type(db: AsyncSession, experiment_type_id: int) -> bool:
-        """Delete an experiment type."""
+        """Delete an experiment type and its corresponding data table."""
         db_experiment_type = await ExperimentTypeService.get_experiment_type(db, experiment_type_id)
         if not db_experiment_type:
             return False
+
+        # Drop the dynamic table first
+        table_name = db_experiment_type.table_name
+        await ExperimentDataService.drop_experiment_table(table_name)
 
         await db.delete(db_experiment_type)
         await db.commit()
