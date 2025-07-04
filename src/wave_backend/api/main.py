@@ -7,7 +7,13 @@ from pathlib import Path
 
 from fastapi import FastAPI
 
-from wave_backend.api.routes import experiment_data, experiment_types, experiments, tags
+from wave_backend.api.routes import (
+    experiment_data,
+    experiment_types,
+    experiments,
+    search,
+    tags,
+)
 from wave_backend.models.database import engine
 from wave_backend.models.models import Base
 from wave_backend.utils.logging import get_logger
@@ -58,6 +64,7 @@ app.include_router(experiment_types.router, prefix="/api/v1")  # 1st: Create exp
 app.include_router(tags.router, prefix="/api/v1")  # 2nd: Create tags (optional)
 app.include_router(experiments.router, prefix="/api/v1")  # 3rd: Create experiments (requires types)
 app.include_router(experiment_data.router, prefix="/api/v1")  # 4th: Manage experiment data
+app.include_router(search.router, prefix="/api/v1/search")  # 5th: Search and query endpoints
 
 
 @app.get("/", summary="API Root", description="Welcome endpoint for the WAVE Backend API")

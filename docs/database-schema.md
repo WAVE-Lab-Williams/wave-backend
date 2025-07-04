@@ -12,13 +12,13 @@ The WAVE Backend uses a PostgreSQL database with a hybrid schema design:
 
 Stores categorization tags for experiments.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | INTEGER | PRIMARY KEY, AUTO_INCREMENT | Unique identifier |
-| `name` | VARCHAR(100) | UNIQUE, NOT NULL, INDEXED | Tag name |
-| `description` | TEXT | NULLABLE | Tag description |
-| `created_at` | TIMESTAMP WITH TIME ZONE | DEFAULT now() | Creation timestamp |
-| `updated_at` | TIMESTAMP WITH TIME ZONE | DEFAULT now(), ON UPDATE now() | Last update timestamp |
+| Column        | Type                     | Constraints                    | Description           |
+| ------------- | ------------------------ | ------------------------------ | --------------------- |
+| `id`          | INTEGER                  | PRIMARY KEY, AUTO_INCREMENT    | Unique identifier     |
+| `name`        | VARCHAR(100)             | UNIQUE, NOT NULL, INDEXED      | Tag name              |
+| `description` | TEXT                     | NULLABLE                       | Tag description       |
+| `created_at`  | TIMESTAMP WITH TIME ZONE | DEFAULT now()                  | Creation timestamp    |
+| `updated_at`  | TIMESTAMP WITH TIME ZONE | DEFAULT now(), ON UPDATE now() | Last update timestamp |
 
 **Indexes:**
 - Primary key on `id`
@@ -30,15 +30,15 @@ Stores categorization tags for experiments.
 
 Defines experiment templates with schema definitions for dynamic data tables.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | INTEGER | PRIMARY KEY, AUTO_INCREMENT | Unique identifier |
-| `name` | VARCHAR(100) | UNIQUE, NOT NULL, INDEXED | Experiment type name |
-| `description` | TEXT | NULLABLE | Experiment type description |
-| `table_name` | VARCHAR(100) | UNIQUE, NOT NULL | Name of the dynamic data table |
-| `schema_definition` | JSON | NOT NULL, DEFAULT {} | Column definitions for data table |
-| `created_at` | TIMESTAMP WITH TIME ZONE | DEFAULT now() | Creation timestamp |
-| `updated_at` | TIMESTAMP WITH TIME ZONE | DEFAULT now(), ON UPDATE now() | Last update timestamp |
+| Column              | Type                     | Constraints                    | Description                       |
+| ------------------- | ------------------------ | ------------------------------ | --------------------------------- |
+| `id`                | INTEGER                  | PRIMARY KEY, AUTO_INCREMENT    | Unique identifier                 |
+| `name`              | VARCHAR(100)             | UNIQUE, NOT NULL, INDEXED      | Experiment type name              |
+| `description`       | TEXT                     | NULLABLE                       | Experiment type description       |
+| `table_name`        | VARCHAR(100)             | UNIQUE, NOT NULL               | Name of the dynamic data table    |
+| `schema_definition` | JSON                     | NOT NULL, DEFAULT {}           | Column definitions for data table |
+| `created_at`        | TIMESTAMP WITH TIME ZONE | DEFAULT now()                  | Creation timestamp                |
+| `updated_at`        | TIMESTAMP WITH TIME ZONE | DEFAULT now(), ON UPDATE now() | Last update timestamp             |
 
 **Indexes:**
 - Primary key on `id`
@@ -74,15 +74,15 @@ Defines experiment templates with schema definitions for dynamic data tables.
 
 Stores individual experiment instances that reference experiment types.
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `uuid` | UUID | PRIMARY KEY, DEFAULT uuid4(), INDEXED | Unique identifier |
-| `experiment_type_id` | INTEGER | FOREIGN KEY → experiment_types.id, NOT NULL | Reference to experiment type |
-| `description` | TEXT | NOT NULL | Experiment description |
-| `tags` | VARCHAR(50)[] | NULLABLE, DEFAULT [] | Array of tag names |
-| `additional_data` | JSON | NULLABLE, DEFAULT {} | Flexible metadata storage |
-| `created_at` | TIMESTAMP WITH TIME ZONE | DEFAULT now() | Creation timestamp |
-| `updated_at` | TIMESTAMP WITH TIME ZONE | DEFAULT now(), ON UPDATE now() | Last update timestamp |
+| Column               | Type                     | Constraints                                 | Description                  |
+| -------------------- | ------------------------ | ------------------------------------------- | ---------------------------- |
+| `uuid`               | UUID                     | PRIMARY KEY, DEFAULT uuid4(), INDEXED       | Unique identifier            |
+| `experiment_type_id` | INTEGER                  | FOREIGN KEY → experiment_types.id, NOT NULL | Reference to experiment type |
+| `description`        | TEXT                     | NOT NULL                                    | Experiment description       |
+| `tags`               | VARCHAR(50)[]            | NULLABLE, DEFAULT []                        | Array of tag names           |
+| `additional_data`    | JSON                     | NULLABLE, DEFAULT {}                        | Flexible metadata storage    |
+| `created_at`         | TIMESTAMP WITH TIME ZONE | DEFAULT now()                               | Creation timestamp           |
+| `updated_at`         | TIMESTAMP WITH TIME ZONE | DEFAULT now(), ON UPDATE now()              | Last update timestamp        |
 
 **Indexes:**
 - Primary key on `uuid`
@@ -110,13 +110,13 @@ These tables are created dynamically when experiment types are created. **Each e
 
 **Standard Columns (Always Present):**
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | INTEGER | PRIMARY KEY, AUTO_INCREMENT | Unique row identifier |
-| `experiment_uuid` | UUID | NOT NULL, INDEXED | Links to specific experiment |
-| `participant_id` | VARCHAR(100) | NOT NULL, INDEXED | Participant identifier |
-| `created_at` | TIMESTAMP | DEFAULT now() | Row creation timestamp |
-| `updated_at` | TIMESTAMP | DEFAULT now() | Row update timestamp |
+| Column            | Type         | Constraints                 | Description                  |
+| ----------------- | ------------ | --------------------------- | ---------------------------- |
+| `id`              | INTEGER      | PRIMARY KEY, AUTO_INCREMENT | Unique row identifier        |
+| `experiment_uuid` | UUID         | NOT NULL, INDEXED           | Links to specific experiment |
+| `participant_id`  | VARCHAR(100) | NOT NULL, INDEXED           | Participant identifier       |
+| `created_at`      | TIMESTAMP    | DEFAULT now()               | Row creation timestamp       |
+| `updated_at`      | TIMESTAMP    | DEFAULT now()               | Row update timestamp         |
 
 **Custom Columns:**
 - Generated from `experiment_types.schema_definition`
@@ -191,7 +191,7 @@ experiments (1) ←→ (many) experiment_data_rows
 
 ### Dynamic Table Creation
 
-**Location:** `src/wave_backend/services/experiment_data.py:31-86`
+**Location:** `src/wave_backend/services/experiment_data.py`
 
 **Process:**
 1. Parse `schema_definition` from experiment type
