@@ -12,6 +12,7 @@ from sqlalchemy import (
     Table,
     func,
 )
+from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import delete, insert, select, text, update
@@ -38,6 +39,7 @@ class ExperimentDataService:
             # Always include these required columns
             columns = [
                 Column("id", Integer, primary_key=True, index=True),
+                Column("experiment_uuid", PostgresUUID(as_uuid=True), nullable=False, index=True),
                 Column("participant_id", String(100), nullable=False, index=True),
                 Column("created_at", DateTime, nullable=False, server_default=text("now()")),
                 Column("updated_at", DateTime, nullable=False, server_default=text("now()")),
@@ -45,7 +47,13 @@ class ExperimentDataService:
 
             # Add custom columns from schema definition
             for column_name, column_type in schema_definition.items():
-                if column_name in ["id", "participant_id", "created_at", "updated_at"]:
+                if column_name in [
+                    "id",
+                    "experiment_uuid",
+                    "participant_id",
+                    "created_at",
+                    "updated_at",
+                ]:
                     continue  # Skip reserved column names
 
                 if isinstance(column_type, str):
@@ -110,7 +118,12 @@ class ExperimentDataService:
 
     @classmethod
     async def insert_data_row(
-        cls, table_name: str, participant_id: str, data: Dict[str, Any], db: AsyncSession
+        cls,
+        table_name: str,
+        experiment_uuid: str,
+        participant_id: str,
+        data: Dict[str, Any],
+        db: AsyncSession,
     ) -> Optional[int]:
         """Insert a data row into an experiment table."""
         try:
@@ -118,7 +131,8 @@ class ExperimentDataService:
             if table is None:
                 return None
 
-            # Ensure participant_id is included
+            # Ensure experiment_uuid and participant_id are included
+            data["experiment_uuid"] = experiment_uuid
             data["participant_id"] = participant_id
 
             # Check for columns that don't exist in the table
@@ -150,10 +164,42 @@ class ExperimentDataService:
             raise
 
     @classmethod
+    def _apply_query_filters(
+        cls,
+        query,
+        table,
+        experiment_uuid: Optional[str] = None,
+        participant_id: Optional[str] = None,
+        filters: Optional[Dict[str, Any]] = None,
+        created_after: Optional[datetime] = None,
+        created_before: Optional[datetime] = None,
+    ):
+        """Apply filters to a query."""
+        if experiment_uuid:
+            query = query.where(table.c.experiment_uuid == experiment_uuid)
+
+        if participant_id:
+            query = query.where(table.c.participant_id == participant_id)
+
+        if created_after:
+            query = query.where(table.c.created_at >= created_after)
+
+        if created_before:
+            query = query.where(table.c.created_at <= created_before)
+
+        if filters:
+            for key, value in filters.items():
+                if key in table.columns:
+                    query = query.where(table.c[key] == value)
+
+        return query
+
+    @classmethod
     async def get_data_rows(
         cls,
         table_name: str,
         db: AsyncSession,
+        experiment_uuid: Optional[str] = None,
         participant_id: Optional[str] = None,
         filters: Optional[Dict[str, Any]] = None,
         created_after: Optional[datetime] = None,
@@ -168,26 +214,17 @@ class ExperimentDataService:
                 return []
 
             query = select(table)
-
-            # Apply filters
-            if participant_id:
-                query = query.where(table.c.participant_id == participant_id)
-
-            if created_after:
-                query = query.where(table.c.created_at >= created_after)
-
-            if created_before:
-                query = query.where(table.c.created_at <= created_before)
-
-            if filters:
-                for key, value in filters.items():
-                    if key in table.columns:
-                        query = query.where(table.c[key] == value)
-
-            # Order by created_at descending and apply pagination
+            query = cls._apply_query_filters(
+                query,
+                table,
+                experiment_uuid,
+                participant_id,
+                filters,
+                created_after,
+                created_before,
+            )
             query = query.order_by(table.c.created_at.desc()).limit(limit).offset(offset)
 
-            # Use the provided database session
             result = await db.execute(query)
             return [dict(row._mapping) for row in result]
 
@@ -197,7 +234,7 @@ class ExperimentDataService:
 
     @classmethod
     async def get_data_row_by_id(
-        cls, table_name: str, row_id: int, db: AsyncSession
+        cls, table_name: str, row_id: int, db: AsyncSession, experiment_uuid: Optional[str] = None
     ) -> Optional[Dict[str, Any]]:
         """Get a single data row by ID."""
         try:
@@ -206,6 +243,10 @@ class ExperimentDataService:
                 return None
 
             query = select(table).where(table.c.id == row_id)
+
+            # Optionally filter by experiment_uuid for additional security
+            if experiment_uuid:
+                query = query.where(table.c.experiment_uuid == experiment_uuid)
 
             # Use the provided database session
             result = await db.execute(query)
@@ -218,7 +259,12 @@ class ExperimentDataService:
 
     @classmethod
     async def update_data_row(
-        cls, table_name: str, row_id: int, data: Dict[str, Any], db: AsyncSession
+        cls,
+        table_name: str,
+        row_id: int,
+        data: Dict[str, Any],
+        db: AsyncSession,
+        experiment_uuid: Optional[str] = None,
     ) -> bool:
         """Update a data row in an experiment table."""
         try:
@@ -226,8 +272,8 @@ class ExperimentDataService:
             if table is None:
                 return False
 
-            # Don't allow updating id, created_at
-            forbidden_columns = ["id", "created_at"]
+            # Don't allow updating id, experiment_uuid, created_at
+            forbidden_columns = ["id", "experiment_uuid", "created_at"]
             valid_data = {
                 k: v for k, v in data.items() if k not in forbidden_columns and k in table.columns
             }
@@ -238,7 +284,13 @@ class ExperimentDataService:
             # Add updated_at
             valid_data["updated_at"] = datetime.now(UTC).replace(tzinfo=None)
 
-            query = update(table).where(table.c.id == row_id).values(**valid_data)
+            query = update(table).where(table.c.id == row_id)
+
+            # Optionally filter by experiment_uuid for additional security
+            if experiment_uuid:
+                query = query.where(table.c.experiment_uuid == experiment_uuid)
+
+            query = query.values(**valid_data)
 
             # Use the provided database session
             result = await db.execute(query)
@@ -250,7 +302,9 @@ class ExperimentDataService:
             return False
 
     @classmethod
-    async def delete_data_row(cls, table_name: str, row_id: int, db: AsyncSession) -> bool:
+    async def delete_data_row(
+        cls, table_name: str, row_id: int, db: AsyncSession, experiment_uuid: Optional[str] = None
+    ) -> bool:
         """Delete a data row from an experiment table."""
         try:
             table = await cls.get_table_reflected(table_name, db)
@@ -258,6 +312,10 @@ class ExperimentDataService:
                 return False
 
             query = delete(table).where(table.c.id == row_id)
+
+            # Optionally filter by experiment_uuid for additional security
+            if experiment_uuid:
+                query = query.where(table.c.experiment_uuid == experiment_uuid)
 
             # Use the provided database session
             result = await db.execute(query)
@@ -296,6 +354,7 @@ class ExperimentDataService:
         cls,
         table_name: str,
         db: AsyncSession,
+        experiment_uuid: Optional[str] = None,
         participant_id: Optional[str] = None,
         filters: Optional[Dict[str, Any]] = None,
     ) -> int:
@@ -306,15 +365,7 @@ class ExperimentDataService:
                 return 0
 
             query = select(func.count(table.c.id)).select_from(table)
-
-            # Apply filters
-            if participant_id:
-                query = query.where(table.c.participant_id == participant_id)
-
-            if filters:
-                for key, value in filters.items():
-                    if key in table.columns:
-                        query = query.where(table.c[key] == value)
+            query = cls._apply_query_filters(query, table, experiment_uuid, participant_id, filters)
 
             # Use the provided database session
             result = await db.execute(query)

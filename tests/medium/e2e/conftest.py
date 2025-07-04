@@ -150,6 +150,7 @@ async def populated_experiment(
 def assert_experiment_data_response(response_data: Dict, expected_participant_id: str):
     """Assert common fields in experiment data responses."""
     assert "id" in response_data
+    assert "experiment_uuid" in response_data
     assert "created_at" in response_data
     assert response_data["participant_id"] == expected_participant_id
 

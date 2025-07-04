@@ -65,7 +65,11 @@ async def create_experiment_data(
     # Insert the data row
     try:
         row_id = await ExperimentDataService.insert_data_row(
-            experiment.experiment_type.table_name, data.participant_id, data.data, db
+            experiment.experiment_type.table_name,
+            str(experiment_id),
+            data.participant_id,
+            data.data,
+            db,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -75,7 +79,7 @@ async def create_experiment_data(
 
     # Return the created row
     row = await ExperimentDataService.get_data_row_by_id(
-        experiment.experiment_type.table_name, row_id, db
+        experiment.experiment_type.table_name, row_id, db, str(experiment_id)
     )
     return row
 
@@ -141,6 +145,7 @@ async def get_experiment_data(
     rows = await ExperimentDataService.get_data_rows(
         experiment.experiment_type.table_name,
         db,
+        experiment_uuid=str(experiment_id),
         participant_id=participant_id,
         created_after=created_after,
         created_before=created_before,
@@ -171,7 +176,10 @@ async def count_experiment_data(
 
     # Count the rows
     count = await ExperimentDataService.count_data_rows(
-        experiment.experiment_type.table_name, db, participant_id=participant_id
+        experiment.experiment_type.table_name,
+        db,
+        experiment_uuid=str(experiment_id),
+        participant_id=participant_id,
     )
 
     return ExperimentDataCountResponse(
@@ -254,7 +262,7 @@ async def get_experiment_data_row(
 
     # Get the data row
     row = await ExperimentDataService.get_data_row_by_id(
-        experiment.experiment_type.table_name, row_id, db
+        experiment.experiment_type.table_name, row_id, db, str(experiment_id)
     )
 
     if not row:
@@ -311,7 +319,7 @@ async def update_experiment_data(
 
     # Update the data row
     success = await ExperimentDataService.update_data_row(
-        experiment.experiment_type.table_name, row_id, update_data, db
+        experiment.experiment_type.table_name, row_id, update_data, db, str(experiment_id)
     )
 
     if not success:
@@ -319,7 +327,7 @@ async def update_experiment_data(
 
     # Return the updated row
     row = await ExperimentDataService.get_data_row_by_id(
-        experiment.experiment_type.table_name, row_id, db
+        experiment.experiment_type.table_name, row_id, db, str(experiment_id)
     )
     return row
 
@@ -343,7 +351,7 @@ async def delete_experiment_data(
 
     # Delete the data row
     success = await ExperimentDataService.delete_data_row(
-        experiment.experiment_type.table_name, row_id, db
+        experiment.experiment_type.table_name, row_id, db, str(experiment_id)
     )
 
     if not success:
@@ -418,6 +426,7 @@ async def query_experiment_data(
     rows = await ExperimentDataService.get_data_rows(
         experiment.experiment_type.table_name,
         db,
+        experiment_uuid=str(experiment_id),
         participant_id=participant_id,
         filters=filters,
         created_after=created_after,

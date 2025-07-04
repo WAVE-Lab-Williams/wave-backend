@@ -13,7 +13,9 @@ This is a FastAPI backend for the WAVE lab with PostgreSQL database support. The
 
 ### Documentation
 
-After API changes it is essential to update `docs/api-usage.md` to keep documentation up to date
+After API changes, update `docs/api-usage.md` to keep documentation up to date.
+
+After db schema changes, update `docs/database-schema.md` to keep documentation up to date.
 
 ## Essential Commands
 

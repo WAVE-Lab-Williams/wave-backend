@@ -58,7 +58,7 @@ The `schema_definition` field allows you to specify additional columns that will
 - `DATETIME` - Date and time values
 - `JSON` - JSON objects
 
-**Note:** When you create an experiment type, a dedicated database table is automatically created with your custom columns plus these required columns: `id`, `participant_id`, `created_at`, `updated_at`.
+**Note:** When you create an experiment type, a dedicated database table is automatically created with your custom columns plus these required columns: `id`, `experiment_uuid`, `participant_id`, `created_at`, `updated_at`.
 
 ### Step 2: Create Tags (Optional)
 
@@ -119,7 +119,20 @@ Once you have created experiments, you can add actual data rows to the experimen
 }
 ```
 
-This creates a new row in the experiment type's data table with the custom columns you defined.
+**Response:**
+```json
+{
+  "id": 1,
+  "experiment_uuid": "550e8400-e29b-41d4-a716-446655440000",
+  "participant_id": "SUBJ-2024-001",
+  "created_at": "2024-01-15T10:30:00Z",
+  "updated_at": "2024-01-15T10:30:00Z",
+  "reaction_time": 1.23,
+  "accuracy": 0.85,
+  "difficulty_level": 2,
+  "stimulus_type": "visual"
+}
+```
 
 **Get Experiment Data**
 
@@ -130,6 +143,34 @@ Supports filtering by:
 - `created_after` - Filter by creation date (after)
 - `created_before` - Filter by creation date (before)
 - `limit` and `offset` - Pagination
+
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "experiment_uuid": "550e8400-e29b-41d4-a716-446655440000",
+    "participant_id": "SUBJ-2024-001",
+    "created_at": "2024-01-15T10:30:00Z",
+    "updated_at": "2024-01-15T10:30:00Z",
+    "reaction_time": 1.23,
+    "accuracy": 0.85,
+    "difficulty_level": 2,
+    "stimulus_type": "visual"
+  },
+  {
+    "id": 2,
+    "experiment_uuid": "550e8400-e29b-41d4-a716-446655440000",
+    "participant_id": "SUBJ-2024-002",
+    "created_at": "2024-01-15T11:45:00Z",
+    "updated_at": "2024-01-15T11:45:00Z",
+    "reaction_time": 1.45,
+    "accuracy": 0.92,
+    "difficulty_level": 3,
+    "stimulus_type": "audio"
+  }
+]
+```
 
 **Update Experiment Data**
 
@@ -142,6 +183,21 @@ Supports filtering by:
     "reaction_time": 1.45,
     "accuracy": 0.90
   }
+}
+```
+
+**Response:**
+```json
+{
+  "id": 1,
+  "experiment_uuid": "550e8400-e29b-41d4-a716-446655440000",
+  "participant_id": "SUBJ-2024-001",
+  "created_at": "2024-01-15T10:30:00Z",
+  "updated_at": "2024-01-15T14:22:00Z",
+  "reaction_time": 1.45,
+  "accuracy": 0.90,
+  "difficulty_level": 2,
+  "stimulus_type": "visual"
 }
 ```
 

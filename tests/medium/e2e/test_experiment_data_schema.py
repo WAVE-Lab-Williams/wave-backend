@@ -21,7 +21,7 @@ async def test_get_experiment_data_columns(async_client, experiment_setup):
     column_names = [col["column_name"] for col in columns_data]
 
     # Verify required base columns exist
-    required_columns = ["id", "participant_id", "created_at"]
+    required_columns = ["id", "experiment_uuid", "participant_id", "created_at"]
     for required_col in required_columns:
         assert required_col in column_names, f"Required column '{required_col}' not found"
 
@@ -103,7 +103,7 @@ async def test_schema_consistency_between_endpoints(async_client, experiment_set
     exp_column_names = [col["column_name"] for col in exp_columns]
 
     # Core columns should be present in both
-    core_columns = ["id", "participant_id", "created_at"]
+    core_columns = ["id", "experiment_uuid", "participant_id", "created_at"]
     for core_col in core_columns:
         assert core_col in data_column_names or core_col in exp_column_names
 
@@ -180,7 +180,7 @@ async def test_comprehensive_schema_validation(async_client, experiment_setup):
     column_types = {col["column_name"]: col["column_type"] for col in columns_data}
 
     # Validate required base columns
-    base_columns = ["id", "participant_id", "created_at", "updated_at"]
+    base_columns = ["id", "experiment_uuid", "participant_id", "created_at", "updated_at"]
     for base_col in base_columns:
         if base_col in column_names:  # Some might be in experiments table, not data table
             assert base_col in column_types

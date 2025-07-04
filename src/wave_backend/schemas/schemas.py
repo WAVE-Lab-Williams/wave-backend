@@ -112,7 +112,7 @@ class ExperimentTypeBase(BaseModel):
     @field_validator("schema_definition")
     def validate_schema_definition(cls, v):
         """Validate that all column types are supported and reserved names are not used."""
-        reserved_names = {"id", "participant_id", "created_at", "updated_at"}
+        reserved_names = {"id", "experiment_uuid", "participant_id", "created_at", "updated_at"}
 
         for column_name, column_def in v.items():
             if column_name.lower() in reserved_names:
