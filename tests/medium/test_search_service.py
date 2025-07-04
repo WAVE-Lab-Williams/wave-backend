@@ -1,11 +1,8 @@
 """Tests for search service functionality."""
 
-# Import the test database URL from conftest
-import os
 from datetime import datetime, timedelta
 
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from wave_backend.schemas.schemas import (
     ExperimentCreate,
@@ -17,35 +14,6 @@ from wave_backend.services.experiment_types import ExperimentTypeService
 from wave_backend.services.experiments import ExperimentService
 from wave_backend.services.search import SearchService
 from wave_backend.services.tags import TagService
-
-POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
-POSTGRES_PORT = os.getenv("POSTGRES_TEST_PORT", "5433")
-POSTGRES_USER = os.getenv("POSTGRES_USER", "wave_user")
-POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "wave_password")
-POSTGRES_DB = os.getenv("POSTGRES_TEST_DB", "wave_test")
-
-TEST_DATABASE_URL = os.getenv(
-    "TEST_DATABASE_URL",
-    (
-        "postgresql+asyncpg://"
-        f"{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
-    ),
-)
-
-
-@pytest.fixture
-async def db_session():
-    """Provide a database session for service tests."""
-    test_engine = create_async_engine(TEST_DATABASE_URL, echo=False)
-    TestSessionLocal = async_sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
-
-    async with TestSessionLocal() as session:
-        try:
-            yield session
-        finally:
-            await session.close()
-
-    await test_engine.dispose()
 
 
 @pytest.fixture

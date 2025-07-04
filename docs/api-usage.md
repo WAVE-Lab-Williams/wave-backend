@@ -218,9 +218,11 @@ Supports filtering by:
 }
 ```
 
-### Step 5: Query and Manage Experiments
+### Step 5: Search and Query Data
 
-#### Get All Experiments
+The API provides powerful search capabilities to find experiments, data, and metadata across your research database.
+
+#### Basic Experiment Queries
 **GET `/api/v1/experiments/`**
 
 Supports filtering by:
@@ -231,13 +233,153 @@ Supports filtering by:
 
 Example: `GET /api/v1/experiments/?tags=cognitive&tags=memory&limit=50`
 
-#### Get Specific Experiment
+#### Advanced Search Capabilities
+
+##### Search Experiments by Tags
+**POST `/api/v1/search/experiments/by-tags`**
+
+Find experiments based on tag criteria with flexible matching:
+
+```json
+{
+  "tags": ["cognitive", "memory"],
+  "match_all": true,
+  "created_after": "2024-01-01T00:00:00Z",
+  "skip": 0,
+  "limit": 100
+}
+```
+
+- `match_all: true` - Experiments must have ALL specified tags
+- `match_all: false` - Experiments must have ANY of the specified tags
+
+##### Search Experiment Types by Description
+**POST `/api/v1/search/experiment-types/by-description`**
+
+Find experiment types using text search in names and descriptions:
+
+```json
+{
+  "search_text": "reaction time",
+  "created_after": "2024-01-01T00:00:00Z",
+  "skip": 0,
+  "limit": 100
+}
+```
+
+##### Search Tags by Name
+**POST `/api/v1/search/tags/by-name`**
+
+Find tags by searching names and descriptions:
+
+```json
+{
+  "search_text": "cognitive",
+  "skip": 0,
+  "limit": 100
+}
+```
+
+##### Search Experiments Within Type
+**POST `/api/v1/search/experiments/by-description-and-type`**
+
+Search experiment descriptions within a specific experiment type:
+
+```json
+{
+  "experiment_type_id": 1,
+  "search_text": "visual stimuli",
+  "skip": 0,
+  "limit": 100
+}
+```
+
+##### Advanced Multi-Criteria Search
+**POST `/api/v1/search/experiments/advanced`**
+
+Combine multiple search criteria:
+
+```json
+{
+  "search_text": "reaction time",
+  "tags": ["cognitive", "visual"],
+  "match_all_tags": false,
+  "experiment_type_id": 1,
+  "created_after": "2024-01-01T00:00:00Z",
+  "skip": 0,
+  "limit": 100
+}
+```
+
+##### Get Experiment Data by Tags
+**POST `/api/v1/search/experiment-data/by-tags`**
+
+Retrieve all experiment data for experiments matching specific tags:
+
+```json
+{
+  "tags": ["memory", "recall"],
+  "match_all": true,
+  "created_after": "2024-01-01T00:00:00Z",
+  "skip": 0,
+  "limit": 500
+}
+```
+
+**Response includes:**
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "experiment_uuid": "550e8400-e29b-41d4-a716-446655440000",
+      "participant_id": "SUBJ-2024-001",
+      "reaction_time": 1.23,
+      "accuracy": 0.85,
+      "experiment_metadata": {
+        "experiment_uuid": "550e8400-e29b-41d4-a716-446655440000",
+        "experiment_description": "Cognitive assessment with visual stimuli",
+        "experiment_type_name": "cognitive_assessment",
+        "experiment_tags": ["cognitive", "memory"]
+      }
+    }
+  ],
+  "total_rows": 150,
+  "total_experiments": 5,
+  "experiment_info": {
+    "550e8400-e29b-41d4-a716-446655440000": {
+      "description": "Cognitive assessment with visual stimuli",
+      "type_name": "cognitive_assessment",
+      "tags": ["cognitive", "memory"],
+      "data_count": 30
+    }
+  },
+  "pagination": {
+    "skip": 0,
+    "limit": 500,
+    "total": 150
+  }
+}
+```
+
+#### Individual Experiment Management
+
+##### Get Specific Experiment
 **GET `/api/v1/experiments/{experiment_uuid}`**
 
-#### Get Experiment Schema Information
+##### Get Experiment Schema Information
 **GET `/api/v1/experiments/{experiment_uuid}/columns`**
 
 Returns the database schema for the experiment, including both base columns and any custom columns defined in the experiment type.
+
+#### Search Features
+
+All search endpoints support:
+- **Date filtering**: `created_after` and `created_before` parameters
+- **Pagination**: `skip` and `limit` parameters  
+- **Case-insensitive text search**: Partial matching in descriptions and names
+- **Data isolation**: Results are properly isolated between experiments
+- **Rich metadata**: Search results include experiment context and metadata
 
 </details>
 
@@ -299,12 +441,19 @@ Here's a complete workflow for a memory study:
    }
    ```
 
-5. **Query Results:**
-   - Get all memory experiments: `GET /api/v1/experiments/?tags=memory`
-   - Get specific participant data: `GET /api/v1/experiments/?participant_id=MEM-STUDY-001`
-   - Get experiment data: `GET /api/v1/experiment-data/{experiment_id}/data/?participant_id=MEM-STUDY-001`
-   - Query data with filters: `POST /api/v1/experiment-data/{experiment_id}/data/query` with custom filters
-   - Get schema info: `GET /api/v1/experiments/{uuid}/columns`
+5. **Query and Search Results:**
+   - **Basic queries:**
+     - Get all memory experiments: `GET /api/v1/experiments/?tags=memory`
+     - Get specific participant data: `GET /api/v1/experiments/?participant_id=MEM-STUDY-001`
+     - Get experiment data: `GET /api/v1/experiment-data/{experiment_id}/data/?participant_id=MEM-STUDY-001`
+     - Query data with filters: `POST /api/v1/experiment-data/{experiment_id}/data/query` with custom filters
+     - Get schema info: `GET /api/v1/experiments/{uuid}/columns`
+   
+   - **Advanced search:**
+     - Find all memory-related experiments: `POST /api/v1/search/experiments/by-tags` with `{"tags": ["memory"]}`
+     - Search for recall experiments: `POST /api/v1/search/experiment-types/by-description` with `{"search_text": "recall"}`
+     - Get combined data from all memory experiments: `POST /api/v1/search/experiment-data/by-tags` with `{"tags": ["memory"]}`
+     - Search within word recall experiments: `POST /api/v1/search/experiments/by-description-and-type` with `{"experiment_type_id": 1, "search_text": "20 word"}`
 
 </details>
 

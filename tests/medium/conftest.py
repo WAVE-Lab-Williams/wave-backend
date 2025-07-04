@@ -96,3 +96,18 @@ async def async_client():
         base_url="http://test",
     ) as client:
         yield client
+
+
+@pytest.fixture
+async def db_session():
+    """Provide a database session for service tests."""
+    test_engine = create_async_engine(TEST_DATABASE_URL, echo=False)
+    TestSessionLocal = async_sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
+
+    async with TestSessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()
+
+    await test_engine.dispose()
