@@ -19,7 +19,7 @@ from wave_backend.schemas.schemas import (
 from wave_backend.services.experiment_data import ExperimentDataService
 from wave_backend.services.experiments import ExperimentService
 
-router = APIRouter(prefix="/experiment-data", tags=["experiment-data"])
+router = APIRouter(prefix="/api/v1/experiment-data", tags=["experiment-data"])
 
 
 @router.post(

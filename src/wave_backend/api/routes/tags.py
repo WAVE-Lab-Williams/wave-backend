@@ -9,7 +9,7 @@ from wave_backend.models.database import get_db
 from wave_backend.schemas.schemas import TagCreate, TagResponse, TagUpdate
 from wave_backend.services.tags import TagService
 
-router = APIRouter(prefix="/tags", tags=["tags"])
+router = APIRouter(prefix="/api/v1/tags", tags=["tags"])
 
 
 @router.post("/", response_model=TagResponse)

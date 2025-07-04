@@ -60,11 +60,11 @@ app = FastAPI(
 )
 
 # Include routers - order determines Swagger UI display order
-app.include_router(experiment_types.router, prefix="/api/v1")  # 1st: Create experiment types
-app.include_router(tags.router, prefix="/api/v1")  # 2nd: Create tags (optional)
-app.include_router(experiments.router, prefix="/api/v1")  # 3rd: Create experiments (requires types)
-app.include_router(experiment_data.router, prefix="/api/v1")  # 4th: Manage experiment data
-app.include_router(search.router, prefix="/api/v1/search")  # 5th: Search and query endpoints
+app.include_router(experiment_types.router)  # 1st: Create experiment types
+app.include_router(tags.router)  # 2nd: Create tags (optional)
+app.include_router(experiments.router)  # 3rd: Create experiments (requires types)
+app.include_router(experiment_data.router)  # 4th: Manage experiment data
+app.include_router(search.router)  # 5th: Search and query endpoints
 
 
 @app.get("/", summary="API Root", description="Welcome endpoint for the WAVE Backend API")

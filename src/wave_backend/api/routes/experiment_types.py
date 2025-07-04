@@ -15,7 +15,7 @@ from wave_backend.schemas.schemas import (
 from wave_backend.services.experiment_types import ExperimentTypeService
 from wave_backend.services.experiments import ExperimentService
 
-router = APIRouter(prefix="/experiment-types", tags=["experiment-types"])
+router = APIRouter(prefix="/api/v1/experiment-types", tags=["experiment-types"])
 
 
 @router.post("/", response_model=ExperimentTypeResponse)

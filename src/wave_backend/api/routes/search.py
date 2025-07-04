@@ -23,7 +23,7 @@ from wave_backend.schemas.search_schemas import (
 )
 from wave_backend.services.search import SearchService
 
-router = APIRouter()
+router = APIRouter(prefix="/api/v1/search", tags=["Search"])
 
 
 @router.post("/experiments/by-tags", response_model=ExperimentTagSearchResponse)

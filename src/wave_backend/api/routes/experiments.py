@@ -15,7 +15,7 @@ from wave_backend.schemas.schemas import (
 )
 from wave_backend.services.experiments import ExperimentService
 
-router = APIRouter(prefix="/experiments", tags=["experiments"])
+router = APIRouter(prefix="/api/v1/experiments", tags=["experiments"])
 
 
 @router.post("/", response_model=ExperimentResponse)
