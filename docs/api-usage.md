@@ -416,7 +416,6 @@ Here's a complete workflow for a memory study:
    ```json
    {
      "experiment_type_id": 1,
-     "participant_id": "MEM-STUDY-001",
      "description": "Word recall test - 20 word list",
      "tags": ["memory", "recall", "verbal"],
      "additional_data": {

@@ -32,21 +32,6 @@ Then visit:
 - **API Documentation**: [docs/api-usage.md](docs/api-usage.md)
 - **Database schema**: [docs/database-schema.md](docs/database-schema.md)
 
-### 🧪 Development Workflow
-
-**Standard Development:**
-1. `make dev` - Start development environment
-2. Make code changes
-3. `make test-medium` - Run integration tests
-4. `make format` - Format and lint code
-5. `make shutdown` - Clean shutdown when done
-
-**Database Management:**
-- Development DB runs on port 5432
-- Test DB runs on port 5433 (auto-started for tests)
-- Both databases are completely isolated
-- Reset commands available for clean testing
-
 ### 📊 API Capabilities
 
 **Core Endpoints:**
@@ -98,6 +83,28 @@ Then visit:
    - API Documentation: http://localhost:8000/docs
    - Alternative docs: http://localhost:8000/redoc
 
+
+### Environment Variables
+
+The application uses environment variables for configuration. All PostgreSQL and FastAPI settings are loaded from the `.env` file (refer to `.env.examaple`)
+
+
+Copy `.env.example` to `.env` and modify as needed (note, that `make setup-local-dev` already handles this)
+
+```bash
+cp .env.example .env
+```
+
+Key configuration variables:
+- `POSTGRES_DB` - PostgreSQL database name (default: wave_dev)
+- `POSTGRES_USER` - PostgreSQL username (default: wave_user)  
+- `POSTGRES_PASSWORD` - PostgreSQL password (default: wave_password)
+- `POSTGRES_PORT` - PostgreSQL port (default: 5432)
+- `POSTGRES_TEST_PORT` - Test database port (default: 5433)
+- `FASTAPI_HOST` - FastAPI host (default: 0.0.0.0)
+- `FASTAPI_PORT` - FastAPI port (default: 8000)
+
+
 ### 📁 Project Structure
 
 ```
@@ -136,7 +143,20 @@ docs/
 └── api-usage.md          # Comprehensive API documentation
 ```
 
+### 🧪 Development Workflow
 
+**Standard Development:**
+1. `make dev` - Start development environment
+2. Make code changes
+3. `make test-medium` - Run integration tests
+4. `make format` - Format and lint code
+5. `make shutdown` - Clean shutdown when done
+
+**Database Management:**
+- Development DB runs on port 5432
+- Test DB runs on port 5433 (auto-started for tests)
+- Both databases are completely isolated
+- Reset commands available for clean testing
 
 ## Available Commands
 
@@ -184,25 +204,4 @@ docs/
 ### Code Quality
 - `make format` - Format code (isort, black, flake8, pylint)
 - `make clean` - Clean up temporary files
-
-## Configuration
-
-The application uses environment variables for configuration. All PostgreSQL and FastAPI settings are loaded from the `.env` file (refer to `.env.examaple`)
-
-### Environment Variables
-
-Copy `.env.example` to `.env` and modify as needed:
-
-```bash
-cp .env.example .env
-```
-
-Key configuration variables:
-- `POSTGRES_DB` - PostgreSQL database name (default: wave_dev)
-- `POSTGRES_USER` - PostgreSQL username (default: wave_user)  
-- `POSTGRES_PASSWORD` - PostgreSQL password (default: wave_password)
-- `POSTGRES_PORT` - PostgreSQL port (default: 5432)
-- `POSTGRES_TEST_PORT` - Test database port (default: 5433)
-- `FASTAPI_HOST` - FastAPI host (default: 0.0.0.0)
-- `FASTAPI_PORT` - FastAPI port (default: 8000)
 
