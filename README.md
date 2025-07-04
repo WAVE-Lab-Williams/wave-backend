@@ -30,7 +30,7 @@ Then visit:
 - **API**: http://localhost:8000
 - **Interactive Docs**: http://localhost:8000/docs
 - **API Documentation**: [docs/api-usage.md](docs/api-usage.md)
-- **Database schema**: [docs/database-schema.md]
+- **Database schema**: [docs/database-schema.md](docs/database-schema.md)
 
 ### 🧪 Development Workflow
 
