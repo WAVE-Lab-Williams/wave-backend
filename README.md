@@ -2,7 +2,68 @@
 
 FastAPI backend for the WAVE lab with PostgreSQL database support.
 
-## Quick Start
+## Repository Overview
+
+The WAVE Backend is a comprehensive REST API designed for managing psychology and behavioral experiments. It provides a flexible, scalable platform for researchers to define experiment types, collect data, and perform advanced searches across experimental datasets.
+
+### 🏗️ Architecture
+
+**Tech Stack:**
+- **FastAPI** - Modern, high-performance web framework for building APIs
+- **PostgreSQL** - Robust relational database with asyncio support
+- **SQLAlchemy** - Async ORM for database operations
+- **Pydantic** - Data validation and settings management
+- **uv** - Fast Python package manager
+- **Docker/Podman** - Containerized database services
+
+### 🚀 Quick Start
+
+The fastest way to get started (assuming you have satisfied the requirements in [Prequisites](#prerequisites)) 
+is with the all-in-one development command:
+
+```bash
+make setup-local-dev  # Initial setup
+make dev              # Start database + API server
+```
+
+Then visit:
+- **API**: http://localhost:8000
+- **Interactive Docs**: http://localhost:8000/docs
+- **API Documentation**: [docs/api-usage.md](docs/api-usage.md)
+- **Database schema**: [docs/database-schema.md]
+
+### 🧪 Development Workflow
+
+**Standard Development:**
+1. `make dev` - Start development environment
+2. Make code changes
+3. `make test-medium` - Run integration tests
+4. `make format` - Format and lint code
+5. `make shutdown` - Clean shutdown when done
+
+**Database Management:**
+- Development DB runs on port 5432
+- Test DB runs on port 5433 (auto-started for tests)
+- Both databases are completely isolated
+- Reset commands available for clean testing
+
+### 📊 API Capabilities
+
+**Core Endpoints:**
+- `/api/v1/experiment-types/` - Define experiment schemas
+- `/api/v1/tags/` - Manage categorization tags  
+- `/api/v1/experiments/` - Create and manage experiments
+- `/api/v1/experiment-data/` - Collect and query experimental data
+- `/api/v1/search/` - Advanced search and discovery
+
+**Data Flow:**
+1. **Define** experiment type with custom schema
+2. **Create** experiment instance with metadata
+3. **Collect** data using dynamic schema validation
+4. **Search** and analyze across experiments
+5. **Export** results for statistical analysis
+
+## Development Environment
 
 ### Prerequisites
 
@@ -36,6 +97,46 @@ FastAPI backend for the WAVE lab with PostgreSQL database support.
    - API: http://localhost:8000
    - API Documentation: http://localhost:8000/docs
    - Alternative docs: http://localhost:8000/redoc
+
+### 📁 Project Structure
+
+```
+src/wave_backend/
+├── api/                    # FastAPI application and routes
+│   ├── main.py            # FastAPI app setup and configuration
+│   └── routes/            # API endpoint definitions
+│       ├── experiments.py      # Experiment management
+│       ├── experiment_data.py  # Dynamic data operations
+│       ├── experiment_types.py # Experiment type definitions
+│       ├── search.py           # Advanced search capabilities
+│       └── tags.py             # Tag management
+├── models/                # Database models and configuration
+│   ├── database.py        # Database connection and sessions
+│   └── models.py          # SQLAlchemy ORM models
+├── schemas/               # Pydantic request/response models
+│   ├── schemas.py         # Core data schemas
+│   ├── search_schemas.py  # Search-specific schemas
+│   └── column_types.py    # Database column type mappings
+├── services/              # Business logic layer
+│   ├── experiments.py         # Experiment operations
+│   ├── experiment_data.py     # Dynamic table management
+│   ├── experiment_types.py    # Experiment type operations
+│   ├── search.py              # Advanced search service
+│   └── tags.py                # Tag operations
+└── utils/                 # Utility modules
+    └── logging.py         # Centralized logging configuration
+
+tests/
+├── small/                 # Unit tests (no database)
+├── medium/                # Integration tests (with database)
+│   └── e2e/              # End-to-end workflow tests
+└── large/                 # Performance and load tests
+
+docs/
+└── api-usage.md          # Comprehensive API documentation
+```
+
+
 
 ## Available Commands
 
