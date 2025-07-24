@@ -96,3 +96,51 @@ The medium and full test suites require a test database which runs in a separate
 on port 5433 to avoid conflicts with the development database (port 5432).
 
 All tests use pytest with asyncio support and coverage reporting.
+
+## Authentication System
+
+### Overview
+The WAVE backend implements API key authentication with role-based access control using the Unkey service. This system validates Bearer tokens, extracts user roles, and enforces hierarchical permissions on FastAPI routes.
+
+### Components
+- **Role System** (`src/wave_backend/auth/roles.py`): Integer-based hierarchy (1=experimentee, 2=researcher, 3=test, 4=admin)
+- **Unkey Client** (`src/wave_backend/auth/unkey_client.py`): REST client with Pydantic models for API validation
+- **Auth Decorators** (`src/wave_backend/auth/decorator.py`): FastAPI dependencies for route protection
+
+### Usage
+```python
+from wave_backend.auth.decorator import require_role, validate_api_key
+from wave_backend.auth.roles import Role
+
+# Basic key validation (any valid key)
+@app.get("/protected")
+async def protected_endpoint(auth: tuple = Depends(validate_api_key)):
+    key_id, user_role = auth
+    return {"access": "granted", "role": user_role}
+
+# Role-based access control
+@app.get("/researcher-only")
+async def researcher_endpoint(auth: tuple = Depends(require_role(Role.RESEARCHER))):
+    key_id, user_role = auth
+    return {"data": "researcher level content"}
+```
+
+### Configuration
+Required environment variables:
+- `WAVE_API_KEY`: Unkey root API key for validation
+- `WAVE_APP_ID`: Unkey application ID
+
+### Data Flow
+1. Client sends `Authorization: Bearer sk_abc123` header
+2. FastAPI dependency extracts token, calls Unkey API with httpx
+3. Unkey validates key and returns role/permissions information
+4. System checks if user's role meets minimum requirement (hierarchical: admin ≥ test ≥ researcher ≥ experimentee)
+5. Route executes if authorized, returns 401/403 if not
+
+### Remaining Development Tasks
+1. **Add httpx dependency** to pyproject.toml for HTTP client
+2. **Create comprehensive large tests** with mocked Unkey API responses
+3. **Update CI/CD** with WAVE_API_KEY and WAVE_APP_ID GitHub secrets
+4. **Integration testing** with actual routes to verify complete auth flow
+
+**IMPORTANT**: Role names and hierarchy must exactly match Unkey application configuration. Changes require synchronization between both systems.
