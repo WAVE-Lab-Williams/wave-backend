@@ -1,6 +1,31 @@
-"""API key validation decorator for FastAPI routes."""
+"""API key validation decorator for FastAPI routes.
 
-from typing import Optional
+Example usage:
+    from wave_backend.auth.decorator import auth
+    from wave_backend.auth.roles import Role
+
+    @router.post("/experiments")
+    @auth.role(Role.RESEARCHER)
+    async def create_experiment(
+        experiment: ExperimentCreate,
+        db: AsyncSession = Depends(get_db),
+        auth: tuple[str, Role]  # Injected by decorator
+    ):
+        key_id, role = auth
+        # ...your code...
+
+    @router.get("/public-data")
+    @auth.any
+    async def get_public_data(
+        auth: tuple[str, Optional[Role]]  # Injected by decorator
+    ):
+        key_id, role = auth
+        # ...your code...
+"""
+
+import inspect
+from functools import wraps
+from typing import Callable, Optional
 
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -117,3 +142,61 @@ def require_role(minimum_role: Role):
         return result.key_id, result.role
 
     return check_role_authorization
+
+
+class Auth:
+    """Auth decorator class for clean route decoration."""
+
+    @staticmethod
+    def any(func: Callable) -> Callable:
+        """Decorator requiring any valid API key."""
+        sig = inspect.signature(func)
+
+        # Create new signature with auth parameter
+        new_params = list(sig.parameters.values())
+        auth_param = inspect.Parameter(
+            "auth",
+            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+            default=Depends(validate_api_key),
+            annotation="tuple[str, Optional[Role]]",
+        )
+        new_params.append(auth_param)
+        new_sig = sig.replace(parameters=new_params)
+
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            return await func(*args, **kwargs)
+
+        wrapper.__signature__ = new_sig
+        return wrapper
+
+    @staticmethod
+    def role(minimum_role: Role):
+        """Decorator factory requiring specific role."""
+
+        def decorator(func: Callable) -> Callable:
+            sig = inspect.signature(func)
+
+            # Create new signature with auth parameter
+            new_params = list(sig.parameters.values())
+            auth_param = inspect.Parameter(
+                "auth",
+                inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                default=Depends(require_role(minimum_role)),
+                annotation="tuple[str, Role]",
+            )
+            new_params.append(auth_param)
+            new_sig = sig.replace(parameters=new_params)
+
+            @wraps(func)
+            async def wrapper(*args, **kwargs):
+                return await func(*args, **kwargs)
+
+            wrapper.__signature__ = new_sig
+            return wrapper
+
+        return decorator
+
+
+# Create lowercase instance for convenient usage
+auth = Auth()

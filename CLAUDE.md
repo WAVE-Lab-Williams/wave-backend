@@ -105,24 +105,43 @@ The WAVE backend implements API key authentication with role-based access contro
 ### Components
 - **Role System** (`src/wave_backend/auth/roles.py`): Integer-based hierarchy (1=experimentee, 2=researcher, 3=test, 4=admin)
 - **Unkey Client** (`src/wave_backend/auth/unkey_client.py`): REST client with Pydantic models for API validation
-- **Auth Decorators** (`src/wave_backend/auth/decorator.py`): FastAPI dependencies for route protection
+- **Auth Decorators** (`src/wave_backend/auth/decorator.py`): Clean decorator syntax for route protection
 
-### Usage
+### Current Usage
+The auth system now provides clean decorator syntax:
+
 ```python
-from wave_backend.auth.decorator import require_role, validate_api_key
+from wave_backend.auth.decorator import auth
 from wave_backend.auth.roles import Role
 
-# Basic key validation (any valid key)
-@app.get("/protected")
-async def protected_endpoint(auth: tuple = Depends(validate_api_key)):
-    key_id, user_role = auth
-    return {"access": "granted", "role": user_role}
+# Any valid API key
+@router.get("/public-data")
+@auth.any
+async def get_public_data(
+    auth: tuple[str, Optional[Role]]  # Injected by decorator
+):
+    key_id, role = auth
+    # ...your code...
 
-# Role-based access control
-@app.get("/researcher-only")
-async def researcher_endpoint(auth: tuple = Depends(require_role(Role.RESEARCHER))):
-    key_id, user_role = auth
-    return {"data": "researcher level content"}
+# Specific role requirement
+@router.post("/experiments")
+@auth.role(Role.RESEARCHER)
+async def create_experiment(
+    experiment: ExperimentCreate,
+    db: AsyncSession = Depends(get_db),
+    auth: tuple[str, Role]  # Injected by decorator
+):
+    key_id, role = auth
+    # ...your code...
+
+# Admin-only endpoints
+@router.delete("/admin/cleanup")
+@auth.role(Role.ADMIN)
+async def admin_cleanup(
+    auth: tuple[str, Role]  # Injected by decorator
+):
+    key_id, role = auth
+    # ...admin operations...
 ```
 
 ### Configuration
@@ -138,9 +157,40 @@ Required environment variables:
 5. Route executes if authorized, returns 401/403 if not
 
 ### Remaining Development Tasks
-1. **Add httpx dependency** to pyproject.toml for HTTP client
-2. **Create comprehensive large tests** with mocked Unkey API responses
-3. **Update CI/CD** with WAVE_API_KEY and WAVE_APP_ID GitHub secrets
-4. **Integration testing** with actual routes to verify complete auth flow
+
+#### High Priority
+1. **Update existing routes** to use new `@auth` decorator syntax
+   - Add auth decorators to routes that currently only have `Depends(get_db)` 
+   - Routes should have both: database dependency AND auth protection
+   - Ensure all protected endpoints have proper role requirements
+
+2. **Large-scale testing with Unkey integration**:
+   - Create mock Unkey API server for comprehensive testing
+   - Test all auth decorator combinations (`@auth.any`, `@auth.role(...)`)
+   - Test error scenarios (invalid keys, insufficient permissions, network failures)
+   - Load testing with high-volume API key validations
+   - Integration tests with actual Unkey service (using test API keys)
+
+3. **Environment and CI/CD**:
+   - Add `WAVE_API_KEY` and `WAVE_APP_ID` to GitHub secrets
+   - Configure test environment with mock/test Unkey credentials
+   - Add auth validation to CI pipeline
+
+#### Medium Priority
+4. **Documentation updates**:
+   - Update `docs/api-usage.md` with auth requirements for each endpoint
+   - Add auth examples to OpenAPI/Swagger documentation
+   - Document role hierarchy and permissions
+
+5. **Error handling improvements**:
+   - Standardize auth error responses across all endpoints
+   - Add rate limiting for auth failures
+   - Implement auth logging for security monitoring
+
+#### Low Priority
+6. **Security enhancements**:
+   - Add request logging for auth events
+   - Implement auth caching (with proper TTL)
+   - Add auth metrics and monitoring
 
 **IMPORTANT**: Role names and hierarchy must exactly match Unkey application configuration. Changes require synchronization between both systems.
