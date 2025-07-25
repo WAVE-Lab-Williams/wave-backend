@@ -172,7 +172,7 @@ Optional environment variables:
 - **Cache management**: `clear_cache()` method available for manual cache clearing
 
 ### Testing Status
-✅ **All large test suites are passing** (34 passed, 2 skipped as expected)
+✅ **All large test suites are passing** (34 passed, 1 skipped as expected)
 - Comprehensive end-to-end authentication testing complete
 - Role hierarchy and boundary condition testing verified  
 - Error handling and edge cases properly tested
@@ -182,31 +182,16 @@ Optional environment variables:
 ### Remaining Development Tasks
 
 #### High Priority
-1. **Update existing routes** to use new `@auth` decorator syntax
-   - Add auth decorators to routes that currently only have `Depends(get_db)` 
-   - Routes should have both: database dependency AND auth protection
-   - Ensure all protected endpoints have proper role requirements
 
-2. **Environment and CI/CD**:
+1. **Environment and CI/CD**:
    - Add `WAVE_API_KEY` and `WAVE_APP_ID` to GitHub secrets
    - Configure test environment with mock/test Unkey credentials
    - Add auth validation to CI pipeline
 
 #### Medium Priority
-3. **Documentation updates**:
+2. **Documentation updates**:
    - Update `docs/api-usage.md` with auth requirements for each endpoint
    - Add auth examples to OpenAPI/Swagger documentation
    - Document role hierarchy and permissions
-
-4. **Error handling improvements**:
-   - Standardize auth error responses across all endpoints
-   - Add rate limiting for auth failures
-   - Implement auth logging for security monitoring
-
-#### Low Priority
-5. **Security enhancements**:
-   - Add request logging for auth events
-   - Implement auth caching (with proper TTL)
-   - Add auth metrics and monitoring
 
 **IMPORTANT**: Role names and hierarchy must exactly match Unkey application configuration. Changes require synchronization between both systems.
