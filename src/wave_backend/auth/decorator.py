@@ -75,6 +75,10 @@ async def validate_api_key(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    if not result.role:
+        logger.warning(f"No role found for key {result.key_id}")
+        raise HTTPException(status_code=403, detail="No role assigned to API key")
+
     logger.info(f"Valid API key - Key ID: {result.key_id}, Role: {result.role}")
     return result.key_id, result.role
 
@@ -152,15 +156,33 @@ class Auth:
         """Decorator requiring any valid API key."""
         sig = inspect.signature(func)
 
-        # Create new signature with auth parameter
-        new_params = list(sig.parameters.values())
-        auth_param = inspect.Parameter(
-            "auth",
-            inspect.Parameter.POSITIONAL_OR_KEYWORD,
-            default=Depends(validate_api_key),
-            annotation="tuple[str, Optional[Role]]",
-        )
-        new_params.append(auth_param)
+        # Check if function already has auth parameter
+        if "auth" in sig.parameters:
+            # Replace the existing auth parameter with dependency injection
+            new_params = []
+            for param in sig.parameters.values():
+                if param.name == "auth":
+                    auth_param = inspect.Parameter(
+                        "auth",
+                        inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                        default=Depends(validate_api_key),
+                        annotation="tuple[str, Optional[Role]]",
+                    )
+                    new_params.append(auth_param)
+                else:
+                    new_params.append(param)
+        else:
+            # Add auth parameter if it doesn't exist
+            new_params = list(sig.parameters.values())
+            auth_param = inspect.Parameter(
+                "auth",
+                inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                default=Depends(validate_api_key),
+                annotation="tuple[str, Optional[Role]]",
+            )
+            new_params.append(auth_param)
+
+        # Create new signature with parameters as a list
         new_sig = sig.replace(parameters=new_params)
 
         @wraps(func)
@@ -177,15 +199,33 @@ class Auth:
         def decorator(func: Callable) -> Callable:
             sig = inspect.signature(func)
 
-            # Create new signature with auth parameter
-            new_params = list(sig.parameters.values())
-            auth_param = inspect.Parameter(
-                "auth",
-                inspect.Parameter.POSITIONAL_OR_KEYWORD,
-                default=Depends(require_role(minimum_role)),
-                annotation="tuple[str, Role]",
-            )
-            new_params.append(auth_param)
+            # Check if function already has auth parameter
+            if "auth" in sig.parameters:
+                # Replace the existing auth parameter with dependency injection
+                new_params = []
+                for param in sig.parameters.values():
+                    if param.name == "auth":
+                        auth_param = inspect.Parameter(
+                            "auth",
+                            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                            default=Depends(require_role(minimum_role)),
+                            annotation="tuple[str, Role]",
+                        )
+                        new_params.append(auth_param)
+                    else:
+                        new_params.append(param)
+            else:
+                # Add auth parameter if it doesn't exist
+                new_params = list(sig.parameters.values())
+                auth_param = inspect.Parameter(
+                    "auth",
+                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    default=Depends(require_role(minimum_role)),
+                    annotation="tuple[str, Role]",
+                )
+                new_params.append(auth_param)
+
+            # Create new signature with parameters as a list
             new_sig = sig.replace(parameters=new_params)
 
             @wraps(func)
