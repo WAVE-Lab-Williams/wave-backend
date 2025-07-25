@@ -136,10 +136,12 @@ class TestAuthIntegrationScenarios:
     async def test_missing_environment_variables(self):
         """Test behavior when required environment variables are missing."""
         with patch.dict("os.environ", {}, clear=True):
-            with pytest.raises(ValueError, match="WAVE_API_KEY environment variable is required"):
+            with pytest.raises(ValueError, match="Invalid authentication configuration"):
+                from wave_backend.auth.config import get_auth_config
                 from wave_backend.auth.unkey_client import get_unkey_client
 
                 get_unkey_client.cache_clear()  # Clear LRU cache
+                get_auth_config.cache_clear()  # Clear config cache
                 get_unkey_client()
 
     @pytest.mark.asyncio

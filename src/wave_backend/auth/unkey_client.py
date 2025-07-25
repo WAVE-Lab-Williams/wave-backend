@@ -1,16 +1,29 @@
 """Unkey API client for key validation using REST API with Pydantic models."""
 
-import os
+import time
 from functools import lru_cache
 from typing import Dict, List, Optional, Union
 
 import httpx
 from pydantic import BaseModel, Field
 
+from wave_backend.auth.config import get_auth_config
 from wave_backend.auth.roles import Role
 from wave_backend.utils.logging import get_logger
 
 logger = get_logger(__name__)
+
+
+class CachedValidationResult:
+    """Wrapper for cached validation results with TTL."""
+
+    def __init__(self, result: "UnkeyValidationResult", ttl_seconds: int = 300):
+        self.result = result
+        self.expires_at = time.time() + ttl_seconds
+
+    def is_expired(self) -> bool:
+        """Check if cached result has expired."""
+        return time.time() > self.expires_at
 
 
 class UnkeyAuthorizationRequest(BaseModel):
@@ -54,11 +67,21 @@ class UnkeyValidationResult(BaseModel):
 class UnkeyClient:
     """Client for interacting with Unkey API using REST endpoints."""
 
-    def __init__(self, api_key: str, app_id: str):
-        """Initialize Unkey client with API credentials."""
+    def __init__(
+        self,
+        api_key: str,
+        app_id: str,
+        cache_ttl_seconds: int = 300,
+        base_url: str = "https://api.unkey.dev",
+        timeout_seconds: float = 10.0,
+    ):
+        """Initialize Unkey client with API credentials and configuration."""
         self.api_key = api_key
         self.app_id = app_id
-        self.base_url = "https://api.unkey.dev"
+        self.base_url = base_url
+        self.cache_ttl_seconds = cache_ttl_seconds
+        self.timeout_seconds = timeout_seconds
+        self._validation_cache: Dict[str, CachedValidationResult] = {}
 
     def _build_request(self, key: str, required_role: Optional[Role] = None) -> UnkeyVerifyRequest:
         """Build Unkey verification request."""
@@ -88,7 +111,7 @@ class UnkeyClient:
                 f"{self.base_url}/v1/keys.verifyKey",
                 headers={"Content-Type": "application/json"},
                 json=request_data.model_dump(by_alias=True, exclude_none=True),
-                timeout=10.0,
+                timeout=self.timeout_seconds,
             )
 
             if response.status_code != 200:
@@ -163,11 +186,43 @@ class UnkeyClient:
             meta=unkey_response.meta,
         )
 
+    def _get_cache_key(self, key: str, required_role: Optional[Role] = None) -> str:
+        """Generate cache key for validation result."""
+        role_str = str(required_role) if required_role else "none"
+        return f"{key[:8]}...{key[-8:]}:{role_str}"
+
+    def _get_cached_result(self, cache_key: str) -> Optional[UnkeyValidationResult]:
+        """Get cached validation result if not expired."""
+        if cache_key in self._validation_cache:
+            cached = self._validation_cache[cache_key]
+            if not cached.is_expired():
+                logger.debug(f"Cache hit for key: {cache_key}")
+                return cached.result
+            else:
+                # Remove expired entry
+                del self._validation_cache[cache_key]
+                logger.debug(f"Cache expired for key: {cache_key}")
+        return None
+
+    def _cache_result(self, cache_key: str, result: UnkeyValidationResult) -> None:
+        """Cache validation result if it's successful."""
+        if result.valid:
+            self._validation_cache[cache_key] = CachedValidationResult(
+                result, self.cache_ttl_seconds
+            )
+            logger.debug(f"Cached result for key: {cache_key}")
+
+    def clear_cache(self) -> None:
+        """Clear all cached validation results."""
+        self._validation_cache.clear()
+        logger.info("Validation cache cleared")
+
     async def validate_key(
         self, key: str, required_role: Optional[Role] = None
     ) -> UnkeyValidationResult:
         """
         Validate an API key with Unkey and extract role information.
+        Uses TTL-based caching for successful validations.
 
         Args:
             key: The API key to validate
@@ -176,10 +231,21 @@ class UnkeyClient:
         Returns:
             UnkeyValidationResult with validation status and role info
         """
+        # Check cache first
+        cache_key = self._get_cache_key(key, required_role)
+        cached_result = self._get_cached_result(cache_key)
+        if cached_result:
+            return cached_result
+
         try:
             request_data = self._build_request(key, required_role)
             unkey_response = await self._make_verify_request(request_data)
-            return self._build_result(unkey_response)
+            result = self._build_result(unkey_response)
+
+            # Cache successful results
+            self._cache_result(cache_key, result)
+
+            return result
 
         except httpx.TimeoutException:
             logger.error("Timeout connecting to Unkey API")
@@ -193,13 +259,12 @@ class UnkeyClient:
 
 @lru_cache(maxsize=1)
 def get_unkey_client() -> UnkeyClient:
-    """Get singleton UnkeyClient instance using lru_cache."""
-    api_key = os.getenv("WAVE_API_KEY")
-    app_id = os.getenv("WAVE_APP_ID")
-
-    if not api_key:
-        raise ValueError("WAVE_API_KEY environment variable is required")
-    if not app_id:
-        raise ValueError("WAVE_APP_ID environment variable is required")
-
-    return UnkeyClient(api_key, app_id)
+    """Get singleton UnkeyClient instance using centralized configuration."""
+    config = get_auth_config()
+    return UnkeyClient(
+        api_key=config.api_key,
+        app_id=config.app_id,
+        cache_ttl_seconds=config.cache_ttl_seconds,
+        base_url=config.base_url,
+        timeout_seconds=config.timeout_seconds,
+    )

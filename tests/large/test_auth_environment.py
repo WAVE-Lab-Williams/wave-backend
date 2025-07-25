@@ -29,7 +29,11 @@ class TestProductionConfigurationScenarios:
         }
 
         with patch.dict(os.environ, prod_env):
+            # Clear both caches to ensure fresh config loading
             get_unkey_client.cache_clear()
+            from wave_backend.auth.config import get_auth_config
+
+            get_auth_config.cache_clear()
 
             client = get_unkey_client()
             assert client.api_key == "sk_prod_1234567890abcdef"
