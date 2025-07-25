@@ -117,7 +117,7 @@ class TestAuthenticatedEndpoints:
             response = await client.get("/public", headers={"Authorization": "Bearer invalid_key"})
 
             assert response.status_code == 401
-            assert "Invalid API key" in response.json()["detail"]
+            assert "Authentication failed" in response.json()["detail"]
 
     @pytest.mark.asyncio
     async def test_researcher_endpoint_with_researcher_key(self, basic_test_app, mock_auth_success):
@@ -266,7 +266,7 @@ class TestAuthErrorHandling:
             )
 
             assert response.status_code == 401
-            assert "Invalid API key" in response.json()["detail"]
+            assert "Authentication failed" in response.json()["detail"]
 
     @pytest.mark.asyncio
     async def test_missing_role_in_response(self, mock_unkey_client):
