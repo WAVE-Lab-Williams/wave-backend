@@ -6,9 +6,12 @@ import pytest
 @pytest.mark.asyncio
 async def test_get_experiment_data_columns(async_client, experiment_setup):
     """Test retrieving column information for experiment data."""
+    headers = {"Authorization": "Bearer test_token"}
     experiment_uuid = experiment_setup["experiment_uuid"]
 
-    response = await async_client.get(f"/api/v1/experiment-data/{experiment_uuid}/data/columns")
+    response = await async_client.get(
+        f"/api/v1/experiment-data/{experiment_uuid}/data/columns", headers=headers
+    )
 
     assert response.status_code == 200
     columns_data = response.json()
@@ -29,9 +32,12 @@ async def test_get_experiment_data_columns(async_client, experiment_setup):
 @pytest.mark.asyncio
 async def test_column_information_structure(async_client, experiment_setup):
     """Test that column information has correct structure."""
+    headers = {"Authorization": "Bearer test_token"}
     experiment_uuid = experiment_setup["experiment_uuid"]
 
-    response = await async_client.get(f"/api/v1/experiment-data/{experiment_uuid}/data/columns")
+    response = await async_client.get(
+        f"/api/v1/experiment-data/{experiment_uuid}/data/columns", headers=headers
+    )
 
     assert response.status_code == 200
     columns_data = response.json()
@@ -49,10 +55,13 @@ async def test_column_information_structure(async_client, experiment_setup):
 @pytest.mark.asyncio
 async def test_custom_schema_columns_present(async_client, experiment_setup):
     """Test that custom schema columns are included in column information."""
+    headers = {"Authorization": "Bearer test_token"}
     experiment_uuid = experiment_setup["experiment_uuid"]
     experiment_type = experiment_setup["experiment_type"]
 
-    response = await async_client.get(f"/api/v1/experiment-data/{experiment_uuid}/data/columns")
+    response = await async_client.get(
+        f"/api/v1/experiment-data/{experiment_uuid}/data/columns", headers=headers
+    )
 
     assert response.status_code == 200
     columns_data = response.json()
@@ -67,9 +76,12 @@ async def test_custom_schema_columns_present(async_client, experiment_setup):
 @pytest.mark.asyncio
 async def test_experiment_columns_endpoint_directly(async_client, experiment_setup):
     """Test the experiment columns endpoint (alternative path)."""
+    headers = {"Authorization": "Bearer test_token"}
     experiment_uuid = experiment_setup["experiment_uuid"]
 
-    response = await async_client.get(f"/api/v1/experiments/{experiment_uuid}/columns")
+    response = await async_client.get(
+        f"/api/v1/experiments/{experiment_uuid}/columns", headers=headers
+    )
 
     assert response.status_code == 200
     columns_info = response.json()
@@ -86,15 +98,18 @@ async def test_schema_consistency_between_endpoints(async_client, experiment_set
     """Test that schema information is consistent between different endpoints."""
     experiment_uuid = experiment_setup["experiment_uuid"]
 
+    headers = {"Authorization": "Bearer test_token"}
     # Get columns from experiment-data endpoint
     data_columns_response = await async_client.get(
-        f"/api/v1/experiment-data/{experiment_uuid}/data/columns"
+        f"/api/v1/experiment-data/{experiment_uuid}/data/columns", headers=headers
     )
     assert data_columns_response.status_code == 200
     data_columns = data_columns_response.json()
 
     # Get columns from experiments endpoint
-    exp_columns_response = await async_client.get(f"/api/v1/experiments/{experiment_uuid}/columns")
+    exp_columns_response = await async_client.get(
+        f"/api/v1/experiments/{experiment_uuid}/columns", headers=headers
+    )
     assert exp_columns_response.status_code == 200
     exp_columns = exp_columns_response.json()["columns"]
 
@@ -111,9 +126,12 @@ async def test_schema_consistency_between_endpoints(async_client, experiment_set
 @pytest.mark.asyncio
 async def test_column_types_are_valid(async_client, experiment_setup):
     """Test that column types are valid SQL types."""
+    headers = {"Authorization": "Bearer test_token"}
     experiment_uuid = experiment_setup["experiment_uuid"]
 
-    response = await async_client.get(f"/api/v1/experiment-data/{experiment_uuid}/data/columns")
+    response = await async_client.get(
+        f"/api/v1/experiment-data/{experiment_uuid}/data/columns", headers=headers
+    )
 
     assert response.status_code == 200
     columns_data = response.json()
@@ -154,9 +172,12 @@ async def test_column_types_are_valid(async_client, experiment_setup):
 @pytest.mark.asyncio
 async def test_schema_information_for_non_existent_experiment(async_client):
     """Test schema endpoint behavior with non-existent experiment."""
+    headers = {"Authorization": "Bearer test_token"}
     fake_uuid = "00000000-0000-4000-8000-000000000000"
 
-    response = await async_client.get(f"/api/v1/experiment-data/{fake_uuid}/data/columns")
+    response = await async_client.get(
+        f"/api/v1/experiment-data/{fake_uuid}/data/columns", headers=headers
+    )
 
     assert response.status_code == 404
 
@@ -167,8 +188,11 @@ async def test_comprehensive_schema_validation(async_client, experiment_setup):
     experiment_uuid = experiment_setup["experiment_uuid"]
     experiment_type = experiment_setup["experiment_type"]
 
+    headers = {"Authorization": "Bearer test_token"}
     # Get column information
-    response = await async_client.get(f"/api/v1/experiment-data/{experiment_uuid}/data/columns")
+    response = await async_client.get(
+        f"/api/v1/experiment-data/{experiment_uuid}/data/columns", headers=headers
+    )
     assert response.status_code == 200
     columns_data = response.json()
 

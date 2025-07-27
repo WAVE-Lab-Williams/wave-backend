@@ -25,14 +25,19 @@ async def test_data_isolation_between_experiments_same_type(
         "additional_data": {"session": "afternoon", "group": "B"},
     }
 
+    headers = {"Authorization": "Bearer test_token"}
     # Create experiment A
-    exp_a_response = await async_client.post("/api/v1/experiments/", json=experiment_a_data)
+    exp_a_response = await async_client.post(
+        "/api/v1/experiments/", json=experiment_a_data, headers=headers
+    )
     assert exp_a_response.status_code == 200
     experiment_a = exp_a_response.json()
     experiment_a_uuid = experiment_a["uuid"]
 
     # Create experiment B
-    exp_b_response = await async_client.post("/api/v1/experiments/", json=experiment_b_data)
+    exp_b_response = await async_client.post(
+        "/api/v1/experiments/", json=experiment_b_data, headers=headers
+    )
     assert exp_b_response.status_code == 200
     experiment_b = exp_b_response.json()
     experiment_b_uuid = experiment_b["uuid"]
@@ -84,26 +89,26 @@ async def test_data_isolation_between_experiments_same_type(
 
     # Add data to experiment A
     response = await async_client.post(
-        f"/api/v1/experiment-data/{experiment_a_uuid}/data/", json=exp_a_data_1
+        f"/api/v1/experiment-data/{experiment_a_uuid}/data/", json=exp_a_data_1, headers=headers
     )
     assert response.status_code == 201
     exp_a_row_1 = response.json()
 
     response = await async_client.post(
-        f"/api/v1/experiment-data/{experiment_a_uuid}/data/", json=exp_a_data_2
+        f"/api/v1/experiment-data/{experiment_a_uuid}/data/", json=exp_a_data_2, headers=headers
     )
     assert response.status_code == 201
     exp_a_row_2 = response.json()
 
     # Add data to experiment B
     response = await async_client.post(
-        f"/api/v1/experiment-data/{experiment_b_uuid}/data/", json=exp_b_data_1
+        f"/api/v1/experiment-data/{experiment_b_uuid}/data/", json=exp_b_data_1, headers=headers
     )
     assert response.status_code == 201
     exp_b_row_1 = response.json()
 
     response = await async_client.post(
-        f"/api/v1/experiment-data/{experiment_b_uuid}/data/", json=exp_b_data_2
+        f"/api/v1/experiment-data/{experiment_b_uuid}/data/", json=exp_b_data_2, headers=headers
     )
     assert response.status_code == 201
     exp_b_row_2 = response.json()
@@ -116,7 +121,7 @@ async def test_data_isolation_between_experiments_same_type(
 
     # Test: Query experiment A data - should only return experiment A data
     exp_a_data_response = await async_client.get(
-        f"/api/v1/experiment-data/{experiment_a_uuid}/data/"
+        f"/api/v1/experiment-data/{experiment_a_uuid}/data/", headers=headers
     )
     assert exp_a_data_response.status_code == 200
     exp_a_retrieved_data = exp_a_data_response.json()
@@ -133,7 +138,7 @@ async def test_data_isolation_between_experiments_same_type(
 
     # Test: Query experiment B data - should only return experiment B data
     exp_b_data_response = await async_client.get(
-        f"/api/v1/experiment-data/{experiment_b_uuid}/data/"
+        f"/api/v1/experiment-data/{experiment_b_uuid}/data/", headers=headers
     )
     assert exp_b_data_response.status_code == 200
     exp_b_retrieved_data = exp_b_data_response.json()
@@ -168,6 +173,7 @@ async def test_participant_filtering_isolated_by_experiment(
     """Test that participant filtering is properly isolated between experiments."""
     experiment_type_id = created_experiment_type["id"]
 
+    headers = {"Authorization": "Bearer test_token"}
     # Create two experiments with the same experiment type
     exp_a_response = await async_client.post(
         "/api/v1/experiments/",
@@ -176,6 +182,7 @@ async def test_participant_filtering_isolated_by_experiment(
             "description": f"Participant Filter Test A - {timestamp}",
             "tags": ["crud-test"],
         },
+        headers=headers,
     )
     assert exp_a_response.status_code == 200
     experiment_a_uuid = exp_a_response.json()["uuid"]
@@ -187,6 +194,7 @@ async def test_participant_filtering_isolated_by_experiment(
             "description": f"Participant Filter Test B - {timestamp}",
             "tags": ["data-test"],
         },
+        headers=headers,
     )
     assert exp_b_response.status_code == 200
     experiment_b_uuid = exp_b_response.json()["uuid"]
@@ -206,7 +214,7 @@ async def test_participant_filtering_isolated_by_experiment(
     }
 
     response = await async_client.post(
-        f"/api/v1/experiment-data/{experiment_a_uuid}/data/", json=exp_a_data
+        f"/api/v1/experiment-data/{experiment_a_uuid}/data/", json=exp_a_data, headers=headers
     )
     assert response.status_code == 201
 
@@ -222,13 +230,14 @@ async def test_participant_filtering_isolated_by_experiment(
     }
 
     response = await async_client.post(
-        f"/api/v1/experiment-data/{experiment_b_uuid}/data/", json=exp_b_data
+        f"/api/v1/experiment-data/{experiment_b_uuid}/data/", json=exp_b_data, headers=headers
     )
     assert response.status_code == 201
 
     # Query experiment A with participant filter
     exp_a_filtered_response = await async_client.get(
-        f"/api/v1/experiment-data/{experiment_a_uuid}/data/?participant_id={same_participant_id}"
+        f"/api/v1/experiment-data/{experiment_a_uuid}/data/?participant_id={same_participant_id}",
+        headers=headers,
     )
     assert exp_a_filtered_response.status_code == 200
     exp_a_filtered_data = exp_a_filtered_response.json()
@@ -242,7 +251,8 @@ async def test_participant_filtering_isolated_by_experiment(
 
     # Query experiment B with participant filter
     exp_b_filtered_response = await async_client.get(
-        f"/api/v1/experiment-data/{experiment_b_uuid}/data/?participant_id={same_participant_id}"
+        f"/api/v1/experiment-data/{experiment_b_uuid}/data/?participant_id={same_participant_id}",
+        headers=headers,
     )
     assert exp_b_filtered_response.status_code == 200
     exp_b_filtered_data = exp_b_filtered_response.json()
@@ -262,6 +272,7 @@ async def test_advanced_query_isolation_between_experiments(
     """Test that advanced query filters are properly isolated between experiments."""
     experiment_type_id = created_experiment_type["id"]
 
+    headers = {"Authorization": "Bearer test_token"}
     # Create two experiments
     exp_a_response = await async_client.post(
         "/api/v1/experiments/",
@@ -270,6 +281,7 @@ async def test_advanced_query_isolation_between_experiments(
             "description": f"Advanced Query Test A - {timestamp}",
             "tags": ["crud-test"],
         },
+        headers=headers,
     )
     assert exp_a_response.status_code == 200
     experiment_a_uuid = exp_a_response.json()["uuid"]
@@ -281,6 +293,7 @@ async def test_advanced_query_isolation_between_experiments(
             "description": f"Advanced Query Test B - {timestamp}",
             "tags": ["crud-test"],
         },
+        headers=headers,
     )
     assert exp_b_response.status_code == 200
     experiment_b_uuid = exp_b_response.json()["uuid"]
@@ -301,6 +314,7 @@ async def test_advanced_query_isolation_between_experiments(
                 "count": shared_count,
             },
         },
+        headers=headers,
     )
 
     # Experiment B data
@@ -315,6 +329,7 @@ async def test_advanced_query_isolation_between_experiments(
                 "count": shared_count,
             },
         },
+        headers=headers,
     )
 
     # Query experiment A with filters
@@ -328,6 +343,7 @@ async def test_advanced_query_isolation_between_experiments(
             "limit": 100,
             "offset": 0,
         },
+        headers=headers,
     )
     assert query_a_response.status_code == 200
     query_a_results = query_a_response.json()
@@ -350,6 +366,7 @@ async def test_advanced_query_isolation_between_experiments(
             "limit": 100,
             "offset": 0,
         },
+        headers=headers,
     )
     assert query_b_response.status_code == 200
     query_b_results = query_b_response.json()
@@ -369,6 +386,7 @@ async def test_count_isolation_between_experiments(
     """Test that count operations are properly isolated between experiments."""
     experiment_type_id = created_experiment_type["id"]
 
+    headers = {"Authorization": "Bearer test_token"}
     # Create two experiments
     exp_a_response = await async_client.post(
         "/api/v1/experiments/",
@@ -377,6 +395,7 @@ async def test_count_isolation_between_experiments(
             "description": f"Count Test A - {timestamp}",
             "tags": ["data-test"],
         },
+        headers=headers,
     )
     assert exp_a_response.status_code == 200
     experiment_a_uuid = exp_a_response.json()["uuid"]
@@ -388,6 +407,7 @@ async def test_count_isolation_between_experiments(
             "description": f"Count Test B - {timestamp}",
             "tags": ["data-test"],
         },
+        headers=headers,
     )
     assert exp_b_response.status_code == 200
     experiment_b_uuid = exp_b_response.json()["uuid"]
@@ -406,6 +426,7 @@ async def test_count_isolation_between_experiments(
                     "count": i,
                 },
             },
+            headers=headers,
         )
 
     # Experiment B: 5 rows
@@ -421,11 +442,12 @@ async def test_count_isolation_between_experiments(
                     "count": i,
                 },
             },
+            headers=headers,
         )
 
     # Count experiment A data
     count_a_response = await async_client.get(
-        f"/api/v1/experiment-data/{experiment_a_uuid}/data/count"
+        f"/api/v1/experiment-data/{experiment_a_uuid}/data/count", headers=headers
     )
     assert count_a_response.status_code == 200
     count_a_data = count_a_response.json()
@@ -435,7 +457,7 @@ async def test_count_isolation_between_experiments(
 
     # Count experiment B data
     count_b_response = await async_client.get(
-        f"/api/v1/experiment-data/{experiment_b_uuid}/data/count"
+        f"/api/v1/experiment-data/{experiment_b_uuid}/data/count", headers=headers
     )
     assert count_b_response.status_code == 200
     count_b_data = count_b_response.json()
@@ -451,6 +473,7 @@ async def test_crud_operations_isolated_by_experiment(
     """Test that CRUD operations (update, delete) are properly isolated between experiments."""
     experiment_type_id = created_experiment_type["id"]
 
+    headers = {"Authorization": "Bearer test_token"}
     # Create two experiments
     exp_a_response = await async_client.post(
         "/api/v1/experiments/",
@@ -459,6 +482,7 @@ async def test_crud_operations_isolated_by_experiment(
             "description": f"CRUD Isolation Test A - {timestamp}",
             "tags": ["crud-test"],
         },
+        headers=headers,
     )
     assert exp_a_response.status_code == 200
     experiment_a_uuid = exp_a_response.json()["uuid"]
@@ -470,6 +494,7 @@ async def test_crud_operations_isolated_by_experiment(
             "description": f"CRUD Isolation Test B - {timestamp}",
             "tags": ["crud-test"],
         },
+        headers=headers,
     )
     assert exp_b_response.status_code == 200
     experiment_b_uuid = exp_b_response.json()["uuid"]
@@ -486,6 +511,7 @@ async def test_crud_operations_isolated_by_experiment(
                 "count": 1,
             },
         },
+        headers=headers,
     )
     assert exp_a_data_response.status_code == 201
     exp_a_row_id = exp_a_data_response.json()["id"]
@@ -501,6 +527,7 @@ async def test_crud_operations_isolated_by_experiment(
                 "count": 2,
             },
         },
+        headers=headers,
     )
     assert exp_b_data_response.status_code == 201
     exp_b_row_id = exp_b_data_response.json()["id"]
@@ -518,6 +545,7 @@ async def test_crud_operations_isolated_by_experiment(
                 "number": 150,
             }
         },
+        headers=headers,
     )
     assert update_response.status_code == 200
     updated_row = update_response.json()
@@ -526,7 +554,7 @@ async def test_crud_operations_isolated_by_experiment(
 
     # Verify experiment B data is unchanged
     exp_b_check_response = await async_client.get(
-        f"/api/v1/experiment-data/{experiment_b_uuid}/data/row/{exp_b_row_id}"
+        f"/api/v1/experiment-data/{experiment_b_uuid}/data/row/{exp_b_row_id}", headers=headers
     )
     assert exp_b_check_response.status_code == 200
     exp_b_unchanged = exp_b_check_response.json()
@@ -535,7 +563,7 @@ async def test_crud_operations_isolated_by_experiment(
 
     # Test: Try to access experiment A row from experiment B context (should fail)
     cross_access_response = await async_client.get(
-        f"/api/v1/experiment-data/{experiment_b_uuid}/data/row/{exp_a_row_id}"
+        f"/api/v1/experiment-data/{experiment_b_uuid}/data/row/{exp_a_row_id}", headers=headers
     )
     assert cross_access_response.status_code == 404
 
@@ -547,12 +575,13 @@ async def test_crud_operations_isolated_by_experiment(
                 "test_value": "malicious_update",
             }
         },
+        headers=headers,
     )
     assert cross_update_response.status_code == 404
 
     # Verify experiment A row is still properly accessible from experiment A
     exp_a_final_check = await async_client.get(
-        f"/api/v1/experiment-data/{experiment_a_uuid}/data/row/{exp_a_row_id}"
+        f"/api/v1/experiment-data/{experiment_a_uuid}/data/row/{exp_a_row_id}", headers=headers
     )
     assert exp_a_final_check.status_code == 200
     final_row = exp_a_final_check.json()

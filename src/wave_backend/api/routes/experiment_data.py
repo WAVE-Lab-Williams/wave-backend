@@ -1,12 +1,14 @@
 """API routes for experiment data operations."""
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from wave_backend.auth.decorator import auth
+from wave_backend.auth.roles import Role
 from wave_backend.models.database import get_db
 from wave_backend.schemas.schemas import (
     ColumnTypeInfo,
@@ -51,10 +53,12 @@ router = APIRouter(prefix="/api/v1/experiment-data", tags=["experiment-data"])
         }
     },
 )
+@auth.role(Role.RESEARCHER)
 async def create_experiment_data(
     experiment_id: UUID,
     data: ExperimentDataCreate,
     db: AsyncSession = Depends(get_db),
+    auth: Tuple[str, Role] = None,  # noqa: F841
 ):
     """Create a new experiment data row with the provided data values."""
     # Get the experiment to get the table name
@@ -124,6 +128,7 @@ async def create_experiment_data(
         }
     },
 )
+@auth.role(Role.RESEARCHER)
 async def get_experiment_data(
     experiment_id: UUID,
     participant_id: Optional[str] = Query(None, description="Filter by participant ID"),
@@ -134,6 +139,7 @@ async def get_experiment_data(
     limit: int = Query(100, ge=1, le=1000, description="Number of rows to return"),
     offset: int = Query(0, ge=0, description="Number of rows to skip"),
     db: AsyncSession = Depends(get_db),
+    auth: Tuple[str, Role] = None,  # noqa: F841
 ):
     """Get experiment data rows with filtering and pagination options."""
     # Get the experiment to get the table name
@@ -163,10 +169,12 @@ async def get_experiment_data(
     description="Get the total count of experiment data rows, "
     "optionally filtered by participant ID.",
 )
+@auth.role(Role.RESEARCHER)
 async def count_experiment_data(
     experiment_id: UUID,
     participant_id: Optional[str] = Query(None, description="Filter by participant ID"),
     db: AsyncSession = Depends(get_db),
+    auth: Tuple[str, Role] = None,  # noqa: F841
 ):
     """Count experiment data rows with optional participant filtering."""
     # Get the experiment to get the table name
@@ -196,9 +204,11 @@ async def count_experiment_data(
     description="Retrieve detailed information about all columns in the experiment's data table, "
     "including data types, nullable status, and default values.",
 )
+@auth.role(Role.RESEARCHER)
 async def get_experiment_data_columns(
     experiment_id: UUID,
     db: AsyncSession = Depends(get_db),
+    auth: Tuple[str, Role] = None,  # noqa: F841
 ):
     """Get detailed column information for an experiment's data table schema."""
     # Get the experiment to get the table name
@@ -249,10 +259,12 @@ async def get_experiment_data_columns(
         }
     },
 )
+@auth.role(Role.RESEARCHER)
 async def get_experiment_data_row(
     experiment_id: UUID,
     row_id: int,
     db: AsyncSession = Depends(get_db),
+    auth: Tuple[str, Role] = None,  # noqa: F841
 ):
     """Get a specific experiment data row by its unique ID."""
     # Get the experiment to get the table name
@@ -298,11 +310,13 @@ async def get_experiment_data_row(
         }
     },
 )
+@auth.role(Role.RESEARCHER)
 async def update_experiment_data(
     experiment_id: UUID,
     row_id: int,
     data: ExperimentDataUpdate,
     db: AsyncSession = Depends(get_db),
+    auth: Tuple[str, Role] = None,  # noqa: F841
 ):
     """Update an experiment data row with partial or complete data changes."""
     # Get the experiment to get the table name
@@ -338,10 +352,12 @@ async def update_experiment_data(
     summary="Delete experiment data row",
     description="Delete a specific experiment data row by its ID.",
 )
+@auth.role(Role.RESEARCHER)
 async def delete_experiment_data(
     experiment_id: UUID,
     row_id: int,
     db: AsyncSession = Depends(get_db),
+    auth: Tuple[str, Role] = None,  # noqa: F841
 ):
     """Delete an experiment data row and return confirmation details."""
     # Get the experiment to get the table name
@@ -403,10 +419,12 @@ async def delete_experiment_data(
         }
     },
 )
+@auth.role(Role.RESEARCHER)
 async def query_experiment_data(
     experiment_id: UUID,
     query_request: ExperimentDataQueryRequest,
     db: AsyncSession = Depends(get_db),
+    auth: Tuple[str, Role] = None,  # noqa: F841
 ):
     """Run an advanced query on experiment data with custom filters and pagination."""
     # Get the experiment to get the table name

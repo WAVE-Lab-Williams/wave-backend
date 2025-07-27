@@ -41,8 +41,9 @@ def experiment_type_data(timestamp):
 async def created_tags(async_client, test_tags_data):
     """Create test tags and return their data."""
     created_tags = []
+    headers = {"Authorization": "Bearer test_token"}
     for tag_data in test_tags_data:
-        response = await async_client.post("/api/v1/tags/", json=tag_data)
+        response = await async_client.post("/api/v1/tags/", json=tag_data, headers=headers)
         assert response.status_code == 200
         created_tags.append(response.json())
     return created_tags
@@ -51,7 +52,10 @@ async def created_tags(async_client, test_tags_data):
 @pytest.fixture
 async def created_experiment_type(async_client, experiment_type_data):
     """Create an experiment type and return its data."""
-    response = await async_client.post("/api/v1/experiment-types/", json=experiment_type_data)
+    headers = {"Authorization": "Bearer test_token"}
+    response = await async_client.post(
+        "/api/v1/experiment-types/", json=experiment_type_data, headers=headers
+    )
     assert response.status_code == 200
     return response.json()
 
@@ -64,7 +68,10 @@ async def experiment_setup(async_client, created_experiment_type, created_tags, 
         "description": "Test experiment for data CRUD",
         "tags": ["crud-test", "data-test"],
     }
-    response = await async_client.post("/api/v1/experiments/", json=experiment_data)
+    headers = {"Authorization": "Bearer test_token"}
+    response = await async_client.post(
+        "/api/v1/experiments/", json=experiment_data, headers=headers
+    )
     assert response.status_code == 200
     experiment = response.json()
 
@@ -125,8 +132,11 @@ async def populated_experiment(
     created_rows = []
 
     # Create initial data row
+    headers = {"Authorization": "Bearer test_token"}
     response = await async_client.post(
-        f"/api/v1/experiment-data/{experiment_uuid}/data/", json=sample_experiment_data
+        f"/api/v1/experiment-data/{experiment_uuid}/data/",
+        json=sample_experiment_data,
+        headers=headers,
     )
     assert response.status_code == 201
     created_rows.append(response.json())
@@ -134,7 +144,7 @@ async def populated_experiment(
     # Create additional rows
     for data in additional_experiment_data:
         response = await async_client.post(
-            f"/api/v1/experiment-data/{experiment_uuid}/data/", json=data
+            f"/api/v1/experiment-data/{experiment_uuid}/data/", json=data, headers=headers
         )
         assert response.status_code == 201
         created_rows.append(response.json())

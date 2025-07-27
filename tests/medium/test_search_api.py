@@ -8,6 +8,7 @@ import pytest
 @pytest.fixture
 async def search_api_setup(async_client):
     """Create test data for search API tests."""
+    headers = {"Authorization": "Bearer test_token"}
     # Create tags
     tag_responses = []
     for tag_data in [
@@ -15,7 +16,7 @@ async def search_api_setup(async_client):
         {"name": "cognitive", "description": "Cognitive research"},
         {"name": "behavioral", "description": "Behavioral analysis"},
     ]:
-        response = await async_client.post("/api/v1/tags/", json=tag_data)
+        response = await async_client.post("/api/v1/tags/", json=tag_data, headers=headers)
         assert response.status_code == 200
         tag_responses.append(response.json())
 
@@ -43,7 +44,9 @@ async def search_api_setup(async_client):
             },
         },
     ]:
-        response = await async_client.post("/api/v1/experiment-types/", json=exp_type_data)
+        response = await async_client.post(
+            "/api/v1/experiment-types/", json=exp_type_data, headers=headers
+        )
         assert response.status_code == 200
         exp_type_responses.append(response.json())
 
@@ -66,7 +69,7 @@ async def search_api_setup(async_client):
             "tags": ["cognitive", "behavioral"],
         },
     ]:
-        response = await async_client.post("/api/v1/experiments/", json=exp_data)
+        response = await async_client.post("/api/v1/experiments/", json=exp_data, headers=headers)
         assert response.status_code == 200
         exp_responses.append(response.json())
 
@@ -97,7 +100,9 @@ async def search_api_setup(async_client):
 
     for entry in data_entries:
         response = await async_client.post(
-            f"/api/v1/experiment-data/{entry['experiment_uuid']}/data/", json=entry["data"]
+            f"/api/v1/experiment-data/{entry['experiment_uuid']}/data/",
+            json=entry["data"],
+            headers=headers,
         )
         assert response.status_code == 201
 
@@ -112,9 +117,11 @@ async def search_api_setup(async_client):
 async def test_search_experiments_by_tags_api(async_client, search_api_setup):
     """Test the experiments by tags search API endpoint."""
     # Test single tag search
+    headers = {"Authorization": "Bearer test_token"}
     response = await async_client.post(
         "/api/v1/search/experiments/by-tags",
         json={"tags": ["neural"], "match_all": True, "skip": 0, "limit": 100},
+        headers=headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -128,6 +135,7 @@ async def test_search_experiments_by_tags_api(async_client, search_api_setup):
     response = await async_client.post(
         "/api/v1/search/experiments/by-tags",
         json={"tags": ["neural", "cognitive"], "match_all": True, "skip": 0, "limit": 100},
+        headers=headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -138,6 +146,7 @@ async def test_search_experiments_by_tags_api(async_client, search_api_setup):
     response = await async_client.post(
         "/api/v1/search/experiments/by-tags",
         json={"tags": ["neural", "behavioral"], "match_all": False, "skip": 0, "limit": 100},
+        headers=headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -147,6 +156,7 @@ async def test_search_experiments_by_tags_api(async_client, search_api_setup):
     response = await async_client.post(
         "/api/v1/search/experiments/by-tags",
         json={"tags": ["nonexistent"], "match_all": True, "skip": 0, "limit": 100},
+        headers=headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -157,9 +167,11 @@ async def test_search_experiments_by_tags_api(async_client, search_api_setup):
 async def test_search_experiment_types_by_description_api(async_client, search_api_setup):
     """Test the experiment types by description search API endpoint."""
     # Test search by description
+    headers = {"Authorization": "Bearer test_token"}
     response = await async_client.post(
         "/api/v1/search/experiment-types/by-description",
         json={"search_text": "reaction", "skip": 0, "limit": 100},
+        headers=headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -174,6 +186,7 @@ async def test_search_experiment_types_by_description_api(async_client, search_a
     response = await async_client.post(
         "/api/v1/search/experiment-types/by-description",
         json={"search_text": "memory", "skip": 0, "limit": 100},
+        headers=headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -184,6 +197,7 @@ async def test_search_experiment_types_by_description_api(async_client, search_a
     response = await async_client.post(
         "/api/v1/search/experiment-types/by-description",
         json={"search_text": "COGNITIVE", "skip": 0, "limit": 100},
+        headers=headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -195,8 +209,11 @@ async def test_search_experiment_types_by_description_api(async_client, search_a
 async def test_search_tags_by_name_api(async_client, search_api_setup):
     """Test the tags by name search API endpoint."""
     # Test search by name
+    headers = {"Authorization": "Bearer test_token"}
     response = await async_client.post(
-        "/api/v1/search/tags/by-name", json={"search_text": "neural", "skip": 0, "limit": 100}
+        "/api/v1/search/tags/by-name",
+        json={"search_text": "neural", "skip": 0, "limit": 100},
+        headers=headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -209,7 +226,9 @@ async def test_search_tags_by_name_api(async_client, search_api_setup):
 
     # Test search by description
     response = await async_client.post(
-        "/api/v1/search/tags/by-name", json={"search_text": "studies", "skip": 0, "limit": 100}
+        "/api/v1/search/tags/by-name",
+        json={"search_text": "studies", "skip": 0, "limit": 100},
+        headers=headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -218,7 +237,9 @@ async def test_search_tags_by_name_api(async_client, search_api_setup):
 
     # Test partial match
     response = await async_client.post(
-        "/api/v1/search/tags/by-name", json={"search_text": "cogn", "skip": 0, "limit": 100}
+        "/api/v1/search/tags/by-name",
+        json={"search_text": "cogn", "skip": 0, "limit": 100},
+        headers=headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -233,6 +254,7 @@ async def test_search_experiments_by_description_and_type_api(async_client, sear
     reaction_time_type_id = experiment_types[0]["id"]
 
     # Test search within specific type
+    headers = {"Authorization": "Bearer test_token"}
     response = await async_client.post(
         "/api/v1/search/experiments/by-description-and-type",
         json={
@@ -241,6 +263,7 @@ async def test_search_experiments_by_description_and_type_api(async_client, sear
             "skip": 0,
             "limit": 100,
         },
+        headers=headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -258,6 +281,7 @@ async def test_search_experiments_by_description_and_type_api(async_client, sear
             "skip": 0,
             "limit": 100,
         },
+        headers=headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -271,6 +295,7 @@ async def test_advanced_experiment_search_api(async_client, search_api_setup):
     reaction_time_type_id = experiment_types[0]["id"]
 
     # Test search with text and tags
+    headers = {"Authorization": "Bearer test_token"}
     response = await async_client.post(
         "/api/v1/search/experiments/advanced",
         json={
@@ -280,6 +305,7 @@ async def test_advanced_experiment_search_api(async_client, search_api_setup):
             "skip": 0,
             "limit": 100,
         },
+        headers=headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -298,6 +324,7 @@ async def test_advanced_experiment_search_api(async_client, search_api_setup):
             "skip": 0,
             "limit": 100,
         },
+        headers=headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -313,6 +340,7 @@ async def test_advanced_experiment_search_api(async_client, search_api_setup):
             "skip": 0,
             "limit": 100,
         },
+        headers=headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -323,9 +351,11 @@ async def test_advanced_experiment_search_api(async_client, search_api_setup):
 async def test_get_experiment_data_by_tags_api(async_client, search_api_setup):
     """Test the experiment data by tags API endpoint."""
     # Test getting data for neural experiments
+    headers = {"Authorization": "Bearer test_token"}
     response = await async_client.post(
         "/api/v1/search/experiment-data/by-tags",
         json={"tags": ["neural"], "match_all": False, "skip": 0, "limit": 100},
+        headers=headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -352,6 +382,7 @@ async def test_get_experiment_data_by_tags_api(async_client, search_api_setup):
     response = await async_client.post(
         "/api/v1/search/experiment-data/by-tags",
         json={"tags": ["behavioral"], "match_all": True, "skip": 0, "limit": 100},
+        headers=headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -370,6 +401,7 @@ async def test_search_api_date_filtering(async_client, search_api_setup):
     # Test with future date (should return no results)
     future_date = (datetime.now() + timedelta(days=1)).isoformat()
 
+    headers = {"Authorization": "Bearer test_token"}
     response = await async_client.post(
         "/api/v1/search/experiments/by-tags",
         json={
@@ -379,6 +411,7 @@ async def test_search_api_date_filtering(async_client, search_api_setup):
             "skip": 0,
             "limit": 100,
         },
+        headers=headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -396,6 +429,7 @@ async def test_search_api_date_filtering(async_client, search_api_setup):
             "skip": 0,
             "limit": 100,
         },
+        headers=headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -406,9 +440,11 @@ async def test_search_api_date_filtering(async_client, search_api_setup):
 async def test_search_api_pagination(async_client, search_api_setup):
     """Test pagination in search API endpoints."""
     # Test experiments pagination
+    headers = {"Authorization": "Bearer test_token"}
     response = await async_client.post(
         "/api/v1/search/experiments/by-tags",
         json={"tags": ["neural"], "match_all": True, "skip": 0, "limit": 1},
+        headers=headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -417,6 +453,7 @@ async def test_search_api_pagination(async_client, search_api_setup):
     response = await async_client.post(
         "/api/v1/search/experiments/by-tags",
         json={"tags": ["neural"], "match_all": True, "skip": 1, "limit": 1},
+        headers=headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -425,6 +462,7 @@ async def test_search_api_pagination(async_client, search_api_setup):
     response = await async_client.post(
         "/api/v1/search/experiments/by-tags",
         json={"tags": ["neural"], "match_all": True, "skip": 2, "limit": 1},
+        headers=headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -435,9 +473,11 @@ async def test_search_api_pagination(async_client, search_api_setup):
 async def test_search_api_validation(async_client, search_api_setup):
     """Test validation in search API endpoints."""
     # Test missing required field
+    headers = {"Authorization": "Bearer test_token"}
     response = await async_client.post(
         "/api/v1/search/experiments/by-tags",
         json={"match_all": True, "skip": 0, "limit": 100},  # Missing tags
+        headers=headers,
     )
     assert response.status_code == 422
 
@@ -445,6 +485,7 @@ async def test_search_api_validation(async_client, search_api_setup):
     response = await async_client.post(
         "/api/v1/search/experiments/by-tags",
         json={"tags": [], "match_all": True, "skip": 0, "limit": 100},
+        headers=headers,
     )
     assert response.status_code == 422
 
@@ -452,6 +493,7 @@ async def test_search_api_validation(async_client, search_api_setup):
     response = await async_client.post(
         "/api/v1/search/experiments/by-tags",
         json={"tags": ["neural"], "match_all": True, "skip": 0, "limit": 2000},
+        headers=headers,
     )
     assert response.status_code == 422
 
@@ -459,5 +501,6 @@ async def test_search_api_validation(async_client, search_api_setup):
     response = await async_client.post(
         "/api/v1/search/experiments/by-tags",
         json={"tags": ["neural"], "match_all": True, "skip": -1, "limit": 100},
+        headers=headers,
     )
     assert response.status_code == 422

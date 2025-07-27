@@ -11,11 +11,14 @@ from tests.medium.e2e.conftest import (
 @pytest.mark.asyncio
 async def test_create_experiment_data(async_client, experiment_setup, sample_experiment_data):
     """Test creating experiment data."""
+    headers = {"Authorization": "Bearer test_token"}
     experiment_uuid = experiment_setup["experiment_uuid"]
     participant_id = experiment_setup["participant_id"]
 
     response = await async_client.post(
-        f"/api/v1/experiment-data/{experiment_uuid}/data/", json=sample_experiment_data
+        f"/api/v1/experiment-data/{experiment_uuid}/data/",
+        json=sample_experiment_data,
+        headers=headers,
     )
 
     assert response.status_code == 201
@@ -33,16 +36,19 @@ async def test_get_specific_experiment_data_row(
     experiment_uuid = experiment_setup["experiment_uuid"]
     participant_id = experiment_setup["participant_id"]
 
+    headers = {"Authorization": "Bearer test_token"}
     # Create data first
     create_response = await async_client.post(
-        f"/api/v1/experiment-data/{experiment_uuid}/data/", json=sample_experiment_data
+        f"/api/v1/experiment-data/{experiment_uuid}/data/",
+        json=sample_experiment_data,
+        headers=headers,
     )
     assert create_response.status_code == 201
     row_id = create_response.json()["id"]
 
     # Get the specific row
     get_response = await async_client.get(
-        f"/api/v1/experiment-data/{experiment_uuid}/data/row/{row_id}"
+        f"/api/v1/experiment-data/{experiment_uuid}/data/row/{row_id}", headers=headers
     )
 
     assert get_response.status_code == 200
@@ -60,16 +66,21 @@ async def test_update_experiment_data(
     """Test updating experiment data."""
     experiment_uuid = experiment_setup["experiment_uuid"]
 
+    headers = {"Authorization": "Bearer test_token"}
     # Create data first
     create_response = await async_client.post(
-        f"/api/v1/experiment-data/{experiment_uuid}/data/", json=sample_experiment_data
+        f"/api/v1/experiment-data/{experiment_uuid}/data/",
+        json=sample_experiment_data,
+        headers=headers,
     )
     assert create_response.status_code == 201
     row_id = create_response.json()["id"]
 
     # Update the data
     update_response = await async_client.put(
-        f"/api/v1/experiment-data/{experiment_uuid}/data/row/{row_id}", json=updated_experiment_data
+        f"/api/v1/experiment-data/{experiment_uuid}/data/row/{row_id}",
+        json=updated_experiment_data,
+        headers=headers,
     )
 
     assert update_response.status_code == 200
@@ -84,16 +95,19 @@ async def test_delete_experiment_data(async_client, experiment_setup, sample_exp
     """Test deleting experiment data."""
     experiment_uuid = experiment_setup["experiment_uuid"]
 
+    headers = {"Authorization": "Bearer test_token"}
     # Create data first
     create_response = await async_client.post(
-        f"/api/v1/experiment-data/{experiment_uuid}/data/", json=sample_experiment_data
+        f"/api/v1/experiment-data/{experiment_uuid}/data/",
+        json=sample_experiment_data,
+        headers=headers,
     )
     assert create_response.status_code == 201
     row_id = create_response.json()["id"]
 
     # Delete the data
     delete_response = await async_client.delete(
-        f"/api/v1/experiment-data/{experiment_uuid}/data/row/{row_id}"
+        f"/api/v1/experiment-data/{experiment_uuid}/data/row/{row_id}", headers=headers
     )
 
     assert delete_response.status_code == 200
@@ -105,19 +119,24 @@ async def test_verify_deletion(async_client, experiment_setup, sample_experiment
     """Test that deleted data cannot be retrieved."""
     experiment_uuid = experiment_setup["experiment_uuid"]
 
+    headers = {"Authorization": "Bearer test_token"}
     # Create data first
     create_response = await async_client.post(
-        f"/api/v1/experiment-data/{experiment_uuid}/data/", json=sample_experiment_data
+        f"/api/v1/experiment-data/{experiment_uuid}/data/",
+        json=sample_experiment_data,
+        headers=headers,
     )
     assert create_response.status_code == 201
     row_id = create_response.json()["id"]
 
     # Delete the data
-    await async_client.delete(f"/api/v1/experiment-data/{experiment_uuid}/data/row/{row_id}")
+    await async_client.delete(
+        f"/api/v1/experiment-data/{experiment_uuid}/data/row/{row_id}", headers=headers
+    )
 
     # Verify deletion - should return 404
     get_deleted_response = await async_client.get(
-        f"/api/v1/experiment-data/{experiment_uuid}/data/row/{row_id}"
+        f"/api/v1/experiment-data/{experiment_uuid}/data/row/{row_id}", headers=headers
     )
 
     assert get_deleted_response.status_code == 404
@@ -131,35 +150,40 @@ async def test_crud_workflow_integration(
     experiment_uuid = experiment_setup["experiment_uuid"]
     participant_id = experiment_setup["participant_id"]
 
+    headers = {"Authorization": "Bearer test_token"}
     # Create
     create_response = await async_client.post(
-        f"/api/v1/experiment-data/{experiment_uuid}/data/", json=sample_experiment_data
+        f"/api/v1/experiment-data/{experiment_uuid}/data/",
+        json=sample_experiment_data,
+        headers=headers,
     )
     assert create_response.status_code == 201
     row_id = create_response.json()["id"]
 
     # Read
     read_response = await async_client.get(
-        f"/api/v1/experiment-data/{experiment_uuid}/data/row/{row_id}"
+        f"/api/v1/experiment-data/{experiment_uuid}/data/row/{row_id}", headers=headers
     )
     assert read_response.status_code == 200
     assert_experiment_data_response(read_response.json(), participant_id)
 
     # Update
     update_response = await async_client.put(
-        f"/api/v1/experiment-data/{experiment_uuid}/data/row/{row_id}", json=updated_experiment_data
+        f"/api/v1/experiment-data/{experiment_uuid}/data/row/{row_id}",
+        json=updated_experiment_data,
+        headers=headers,
     )
     assert update_response.status_code == 200
     assert_experiment_data_matches(update_response.json(), updated_experiment_data)
 
     # Delete
     delete_response = await async_client.delete(
-        f"/api/v1/experiment-data/{experiment_uuid}/data/row/{row_id}"
+        f"/api/v1/experiment-data/{experiment_uuid}/data/row/{row_id}", headers=headers
     )
     assert delete_response.status_code == 200
 
     # Verify deletion
     verify_response = await async_client.get(
-        f"/api/v1/experiment-data/{experiment_uuid}/data/row/{row_id}"
+        f"/api/v1/experiment-data/{experiment_uuid}/data/row/{row_id}", headers=headers
     )
     assert verify_response.status_code == 404
