@@ -5,7 +5,7 @@ import time
 import pytest
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_create_tag_api(async_client):
     """Test creating a tag via API."""
     timestamp = str(int(time.time() * 1000))
@@ -20,7 +20,7 @@ async def test_create_tag_api(async_client):
     assert "created_at" in data
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_get_tags_api(async_client):
     """Test getting tags via API."""
     # Create a tag first
@@ -34,7 +34,7 @@ async def test_get_tags_api(async_client):
     assert len(data) >= 1
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_create_duplicate_tag_api(async_client):
     """Test creating a duplicate tag via API."""
     timestamp = str(int(time.time() * 1000))

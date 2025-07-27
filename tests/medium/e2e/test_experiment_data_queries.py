@@ -3,7 +3,7 @@
 import pytest
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_pagination_with_limit_and_offset(async_client, populated_experiment):
     """Test pagination using limit and offset parameters."""
     experiment_uuid = populated_experiment["experiment_uuid"]
@@ -17,7 +17,7 @@ async def test_pagination_with_limit_and_offset(async_client, populated_experime
     assert len(paginated_data) == 2
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_participant_id_filtering(async_client, populated_experiment):
     """Test filtering by participant ID."""
     experiment_uuid = populated_experiment["experiment_uuid"]
@@ -34,7 +34,7 @@ async def test_participant_id_filtering(async_client, populated_experiment):
     assert all(row["participant_id"] == participant_id for row in filtered_data)
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_custom_query_filters(async_client, experiment_setup, updated_experiment_data):
     """Test custom query filters using POST endpoint."""
     experiment_uuid = experiment_setup["experiment_uuid"]
@@ -64,7 +64,7 @@ async def test_custom_query_filters(async_client, experiment_setup, updated_expe
     assert query_results[0]["number"] == 99
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_query_with_no_results(async_client, populated_experiment):
     """Test query that returns no results."""
     experiment_uuid = populated_experiment["experiment_uuid"]
@@ -86,7 +86,7 @@ async def test_query_with_no_results(async_client, populated_experiment):
     assert len(query_results) == 0
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_query_with_multiple_filters(
     async_client, experiment_setup, additional_experiment_data
 ):
@@ -120,7 +120,7 @@ async def test_query_with_multiple_filters(
     assert query_results[0]["count"] == 10
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_pagination_edge_cases(async_client, populated_experiment):
     """Test pagination edge cases."""
     experiment_uuid = populated_experiment["experiment_uuid"]
@@ -141,7 +141,7 @@ async def test_pagination_edge_cases(async_client, populated_experiment):
     assert len(response.json()) == total_count
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_filter_by_non_existent_participant(async_client, populated_experiment):
     """Test filtering by non-existent participant ID."""
     experiment_uuid = populated_experiment["experiment_uuid"]
@@ -155,7 +155,7 @@ async def test_filter_by_non_existent_participant(async_client, populated_experi
     assert len(filtered_data) == 0
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_comprehensive_query_workflow(
     async_client, experiment_setup, sample_experiment_data, additional_experiment_data
 ):

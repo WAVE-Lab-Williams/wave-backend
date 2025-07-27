@@ -5,7 +5,7 @@ import time
 import pytest
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_create_experiment_api(async_client):
     """Test creating an experiment via API."""
     # Create experiment type first
@@ -40,7 +40,7 @@ async def test_create_experiment_api(async_client):
     assert "created_at" in data
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_get_experiments_api(async_client):
     """Test getting experiments via API."""
     # Create experiment type first
@@ -66,7 +66,7 @@ async def test_get_experiments_api(async_client):
     assert len(data) >= 1
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_get_experiment_columns_api(async_client):
     """Test getting experiment columns via API."""
     # Create experiment type first

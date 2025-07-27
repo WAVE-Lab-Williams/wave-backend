@@ -8,7 +8,7 @@ from tests.medium.e2e.conftest import (
 )
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_create_experiment_data(async_client, experiment_setup, sample_experiment_data):
     """Test creating experiment data."""
     experiment_uuid = experiment_setup["experiment_uuid"]
@@ -25,7 +25,7 @@ async def test_create_experiment_data(async_client, experiment_setup, sample_exp
     assert_experiment_data_matches(created_data, sample_experiment_data)
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_get_specific_experiment_data_row(
     async_client, experiment_setup, sample_experiment_data
 ):
@@ -53,7 +53,7 @@ async def test_get_specific_experiment_data_row(
     assert_experiment_data_matches(retrieved_data, sample_experiment_data)
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_update_experiment_data(
     async_client, experiment_setup, sample_experiment_data, updated_experiment_data
 ):
@@ -79,7 +79,7 @@ async def test_update_experiment_data(
     assert_experiment_data_matches(updated_data, updated_experiment_data)
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_delete_experiment_data(async_client, experiment_setup, sample_experiment_data):
     """Test deleting experiment data."""
     experiment_uuid = experiment_setup["experiment_uuid"]
@@ -100,7 +100,7 @@ async def test_delete_experiment_data(async_client, experiment_setup, sample_exp
     assert delete_response.json()["message"] == "Experiment data row deleted successfully"
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_verify_deletion(async_client, experiment_setup, sample_experiment_data):
     """Test that deleted data cannot be retrieved."""
     experiment_uuid = experiment_setup["experiment_uuid"]
@@ -123,7 +123,7 @@ async def test_verify_deletion(async_client, experiment_setup, sample_experiment
     assert get_deleted_response.status_code == 404
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_crud_workflow_integration(
     async_client, experiment_setup, sample_experiment_data, updated_experiment_data
 ):

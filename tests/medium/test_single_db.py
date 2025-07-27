@@ -5,7 +5,7 @@ import time
 import pytest
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_create_single_tag(async_client):
     """Test creating a single tag via API."""
     timestamp = str(int(time.time() * 1000))

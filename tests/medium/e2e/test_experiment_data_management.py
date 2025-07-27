@@ -5,7 +5,7 @@ import pytest
 from tests.medium.e2e.conftest import assert_experiment_list_response
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_create_multiple_data_rows(
     async_client, experiment_setup, additional_experiment_data
 ):
@@ -24,7 +24,7 @@ async def test_create_multiple_data_rows(
     assert len(set(created_ids)) == len(created_ids)  # All IDs are unique
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_list_all_experiment_data(async_client, populated_experiment):
     """Test retrieving all experiment data."""
     experiment_uuid = populated_experiment["experiment_uuid"]
@@ -38,7 +38,7 @@ async def test_list_all_experiment_data(async_client, populated_experiment):
     assert_experiment_list_response(all_data, expected_count, participant_id)
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_data_count_operations(async_client, populated_experiment):
     """Test data count endpoint."""
     experiment_uuid = populated_experiment["experiment_uuid"]
@@ -51,7 +51,7 @@ async def test_data_count_operations(async_client, populated_experiment):
     assert count_data["count"] == expected_count
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_count_after_deletion(async_client, populated_experiment):
     """Test that count updates correctly after deletion."""
     experiment_uuid = populated_experiment["experiment_uuid"]
@@ -71,7 +71,7 @@ async def test_count_after_deletion(async_client, populated_experiment):
     assert final_count == initial_count - 1
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_empty_experiment_data_list(async_client, experiment_setup):
     """Test listing data for experiment with no data."""
     experiment_uuid = experiment_setup["experiment_uuid"]
@@ -83,7 +83,7 @@ async def test_empty_experiment_data_list(async_client, experiment_setup):
     assert data == []
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_empty_experiment_data_count(async_client, experiment_setup):
     """Test count for experiment with no data."""
     experiment_uuid = experiment_setup["experiment_uuid"]
@@ -95,7 +95,7 @@ async def test_empty_experiment_data_count(async_client, experiment_setup):
     assert count_data["count"] == 0
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_bulk_operations_workflow(async_client, experiment_setup, additional_experiment_data):
     """Test complete bulk operations workflow."""
     experiment_uuid = experiment_setup["experiment_uuid"]

@@ -10,7 +10,7 @@ from tests.medium.e2e.conftest import (
 )
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_complete_experiment_workflow_e2e(
     async_client, experiment_setup, sample_experiment_data
 ):
@@ -86,7 +86,7 @@ async def test_complete_experiment_workflow_e2e(
     assert verify_response.status_code == 404
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_experiment_data_error_cases(async_client):
     """Test error cases for experiment data operations."""
     # Test with non-existent experiment ID
@@ -114,7 +114,7 @@ async def test_experiment_data_error_cases(async_client):
     assert invalid_response.status_code == 422  # Validation error
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_experiment_data_validation(async_client):
     """Test validation of experiment data requests."""
     # Use the error case test's fake UUID to avoid creating experiment types
@@ -135,7 +135,7 @@ async def test_experiment_data_validation(async_client):
     assert response.status_code == 422
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_experiment_tag_validation(async_client):
     """Test tag validation for experiment creation."""
     # Setup: Create experiment type

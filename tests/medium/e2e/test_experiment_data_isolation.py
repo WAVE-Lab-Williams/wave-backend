@@ -3,7 +3,7 @@
 import pytest
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_data_isolation_between_experiments_same_type(
     async_client, created_experiment_type, created_tags, timestamp
 ):
@@ -161,7 +161,7 @@ async def test_data_isolation_between_experiments_same_type(
     assert exp_a_test_values.isdisjoint(exp_b_test_values)
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_participant_filtering_isolated_by_experiment(
     async_client, created_experiment_type, created_tags, timestamp
 ):
@@ -255,7 +255,7 @@ async def test_participant_filtering_isolated_by_experiment(
     assert exp_b_filtered_data[0]["number"] == 222
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_advanced_query_isolation_between_experiments(
     async_client, created_experiment_type, created_tags, timestamp
 ):
@@ -362,7 +362,7 @@ async def test_advanced_query_isolation_between_experiments(
     assert query_b_results[0]["number"] == 200
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_count_isolation_between_experiments(
     async_client, created_experiment_type, created_tags, timestamp
 ):
@@ -444,7 +444,7 @@ async def test_count_isolation_between_experiments(
     assert count_b_data["experiment_id"] == experiment_b_uuid
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_crud_operations_isolated_by_experiment(
     async_client, created_experiment_type, created_tags, timestamp
 ):

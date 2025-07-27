@@ -108,7 +108,7 @@ async def search_api_setup(async_client):
     }
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_search_experiments_by_tags_api(async_client, search_api_setup):
     """Test the experiments by tags search API endpoint."""
     # Test single tag search
@@ -153,7 +153,7 @@ async def test_search_experiments_by_tags_api(async_client, search_api_setup):
     assert len(data["experiments"]) == 0
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_search_experiment_types_by_description_api(async_client, search_api_setup):
     """Test the experiment types by description search API endpoint."""
     # Test search by description
@@ -191,7 +191,7 @@ async def test_search_experiment_types_by_description_api(async_client, search_a
     assert data["experiment_types"][0]["name"] == "reaction_time_test"
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_search_tags_by_name_api(async_client, search_api_setup):
     """Test the tags by name search API endpoint."""
     # Test search by name
@@ -226,7 +226,7 @@ async def test_search_tags_by_name_api(async_client, search_api_setup):
     assert data["tags"][0]["name"] == "cognitive"
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_search_experiments_by_description_and_type_api(async_client, search_api_setup):
     """Test the experiments by description and type search API endpoint."""
     experiment_types = search_api_setup["experiment_types"]
@@ -264,7 +264,7 @@ async def test_search_experiments_by_description_and_type_api(async_client, sear
     assert len(data["experiments"]) == 0
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_advanced_experiment_search_api(async_client, search_api_setup):
     """Test the advanced experiment search API endpoint."""
     experiment_types = search_api_setup["experiment_types"]
@@ -319,7 +319,7 @@ async def test_advanced_experiment_search_api(async_client, search_api_setup):
     assert len(data["experiments"]) == 0
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_get_experiment_data_by_tags_api(async_client, search_api_setup):
     """Test the experiment data by tags API endpoint."""
     # Test getting data for neural experiments
@@ -364,7 +364,7 @@ async def test_get_experiment_data_by_tags_api(async_client, search_api_setup):
     assert data["data"][0]["experiment_metadata"]["experiment_tags"] == ["cognitive", "behavioral"]
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_search_api_date_filtering(async_client, search_api_setup):
     """Test date filtering in search API endpoints."""
     # Test with future date (should return no results)
@@ -402,7 +402,7 @@ async def test_search_api_date_filtering(async_client, search_api_setup):
     assert len(data["experiments"]) == 2
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_search_api_pagination(async_client, search_api_setup):
     """Test pagination in search API endpoints."""
     # Test experiments pagination
@@ -431,7 +431,7 @@ async def test_search_api_pagination(async_client, search_api_setup):
     assert len(data["experiments"]) == 0
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_search_api_validation(async_client, search_api_setup):
     """Test validation in search API endpoints."""
     # Test missing required field

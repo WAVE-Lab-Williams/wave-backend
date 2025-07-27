@@ -5,7 +5,7 @@ import pytest
 from tests.medium.e2e.conftest import assert_tag_lookup_contains_experiment
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_lookup_experiments_by_single_tag(async_client, experiment_setup):
     """Test looking up experiments by a single tag."""
     experiment_uuid = experiment_setup["experiment_uuid"]
@@ -18,7 +18,7 @@ async def test_lookup_experiments_by_single_tag(async_client, experiment_setup):
     assert_tag_lookup_contains_experiment(tag_experiments, experiment_uuid)
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_lookup_experiments_by_multiple_tags(async_client, experiment_setup):
     """Test looking up experiments by multiple tags."""
     experiment_uuid = experiment_setup["experiment_uuid"]
@@ -31,7 +31,7 @@ async def test_lookup_experiments_by_multiple_tags(async_client, experiment_setu
     assert_tag_lookup_contains_experiment(multi_tag_experiments, experiment_uuid)
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_lookup_experiments_by_non_existent_tag(async_client):
     """Test looking up experiments by non-existent tag returns empty results."""
     response = await async_client.get("/api/v1/experiments/?tags=nonexistent-tag")
@@ -41,7 +41,7 @@ async def test_lookup_experiments_by_non_existent_tag(async_client):
     assert len(empty_experiments) == 0
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_tag_filtering_specificity(
     async_client, experiment_setup, created_tags, created_experiment_type, timestamp
 ):
@@ -74,7 +74,7 @@ async def test_tag_filtering_specificity(
     assert not other_exp_found
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_experiment_discovery_with_experiment_type_filter(async_client, experiment_setup):
     """Test combining tag search with experiment type filtering."""
     experiment_uuid = experiment_setup["experiment_uuid"]
@@ -94,7 +94,7 @@ async def test_experiment_discovery_with_experiment_type_filter(async_client, ex
         assert exp["experiment_type_id"] == experiment_type_id
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_experiment_discovery_pagination(
     async_client, experiment_setup, created_experiment_type, timestamp
 ):
@@ -124,7 +124,7 @@ async def test_experiment_discovery_pagination(
     assert len(page2_experiments) >= 1  # At least our original experiment
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_case_sensitive_tag_search(async_client, experiment_setup):
     """Test that tag search is case sensitive."""
     experiment_uuid = experiment_setup["experiment_uuid"]
@@ -144,7 +144,7 @@ async def test_case_sensitive_tag_search(async_client, experiment_setup):
     assert not wrong_case_found
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_experiment_tag_inclusion_in_response(async_client, experiment_setup):
     """Test that experiment responses include tag information."""
     experiment_uuid = experiment_setup["experiment_uuid"]
@@ -168,7 +168,7 @@ async def test_experiment_tag_inclusion_in_response(async_client, experiment_set
     assert "data-test" in our_experiment["tags"]
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_comprehensive_experiment_discovery_workflow(
     async_client, experiment_setup, created_experiment_type, timestamp
 ):
