@@ -119,7 +119,7 @@ async def search_test_setup(db_session):
     }
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_search_experiments_by_tags(db_session, search_test_setup):
     """Test searching experiments by tags."""
     # Test single tag search
@@ -151,7 +151,7 @@ async def test_search_experiments_by_tags(db_session, search_test_setup):
     assert len(results) == 0
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_search_experiment_types_by_description(db_session, search_test_setup):
     """Test searching experiment types by description text."""
     # Test search by description
@@ -182,7 +182,7 @@ async def test_search_experiment_types_by_description(db_session, search_test_se
     assert len(results) == 0
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_search_tags_by_name(db_session, search_test_setup):
     """Test searching tags by name."""
     # Test search by name
@@ -206,7 +206,7 @@ async def test_search_tags_by_name(db_session, search_test_setup):
     assert results[0].name == "behavioral"
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_search_experiments_by_description_and_type(db_session, search_test_setup):
     """Test searching experiment descriptions within a specific type."""
     experiment_types = search_test_setup["experiment_types"]
@@ -232,7 +232,7 @@ async def test_search_experiments_by_description_and_type(db_session, search_tes
     assert len(results) == 0
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_advanced_experiment_search(db_session, search_test_setup):
     """Test advanced search combining multiple criteria."""
     experiment_types = search_test_setup["experiment_types"]
@@ -275,7 +275,7 @@ async def test_advanced_experiment_search(db_session, search_test_setup):
     assert len(results) == 3
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_date_range_filtering(db_session, search_test_setup):
     """Test date range filtering across all search methods."""
     # Create a future date
@@ -307,7 +307,7 @@ async def test_date_range_filtering(db_session, search_test_setup):
     assert len(results) == 1
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_pagination(db_session, search_test_setup):
     """Test pagination across search methods."""
     # Test experiments pagination
@@ -327,7 +327,7 @@ async def test_pagination(db_session, search_test_setup):
     assert len(results) == 0
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_get_experiment_data_by_tags(db_session, search_test_setup):
     """Test getting experiment data by tags."""
     result = await SearchService.get_experiment_data_by_tags(
@@ -367,7 +367,7 @@ async def test_get_experiment_data_by_tags(db_session, search_test_setup):
     ]
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_search_with_empty_results(db_session, search_test_setup):
     """Test search methods with queries that return no results."""
     # Test with nonexistent tag

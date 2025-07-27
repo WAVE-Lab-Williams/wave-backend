@@ -5,9 +5,10 @@ import time
 import pytest
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_create_experiment_type_api(async_client):
     """Test creating an experiment type via API."""
+    headers = {"Authorization": "Bearer test_token"}
     timestamp = str(int(time.time() * 1000))
     exp_type_data = {
         "name": f"simple-api-experiment-{timestamp}",
@@ -15,7 +16,9 @@ async def test_create_experiment_type_api(async_client):
         "table_name": f"simple_api_experiment_table_{timestamp}",
         "schema_definition": {"field1": "string"},
     }
-    response = await async_client.post("/api/v1/experiment-types/", json=exp_type_data)
+    response = await async_client.post(
+        "/api/v1/experiment-types/", json=exp_type_data, headers=headers
+    )
 
     assert response.status_code == 200
     data = response.json()
@@ -26,9 +29,10 @@ async def test_create_experiment_type_api(async_client):
     assert "created_at" in data
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_get_experiment_types_api(async_client):
     """Test getting experiment types via API."""
+    headers = {"Authorization": "Bearer test_token"}
     # Create an experiment type first
     timestamp = str(int(time.time() * 1000))
     exp_type_data = {
@@ -36,26 +40,29 @@ async def test_get_experiment_types_api(async_client):
         "description": "Experiment for listing",
         "table_name": f"simple_list_experiment_table_{timestamp}",
     }
-    await async_client.post("/api/v1/experiment-types/", json=exp_type_data)
+    await async_client.post("/api/v1/experiment-types/", json=exp_type_data, headers=headers)
 
-    response = await async_client.get("/api/v1/experiment-types/")
+    response = await async_client.get("/api/v1/experiment-types/", headers=headers)
     assert response.status_code == 200
     data = response.json()
     assert len(data) >= 1
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_create_duplicate_experiment_type_api(async_client):
     """Test creating a duplicate experiment type via API."""
+    headers = {"Authorization": "Bearer test_token"}
     timestamp = str(int(time.time() * 1000))
     exp_type_data = {
         "name": f"simple-duplicate-experiment-{timestamp}",
         "description": "First experiment",
         "table_name": f"simple_duplicate_table_{timestamp}",
     }
-    await async_client.post("/api/v1/experiment-types/", json=exp_type_data)
+    await async_client.post("/api/v1/experiment-types/", json=exp_type_data, headers=headers)
 
     # Try to create duplicate
-    response = await async_client.post("/api/v1/experiment-types/", json=exp_type_data)
+    response = await async_client.post(
+        "/api/v1/experiment-types/", json=exp_type_data, headers=headers
+    )
     assert response.status_code == 400
     assert "already exists" in response.json()["detail"]

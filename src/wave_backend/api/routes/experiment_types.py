@@ -1,10 +1,12 @@
 """API routes for experiment type operations."""
 
-from typing import List
+from typing import List, Tuple
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from wave_backend.auth.decorator import auth
+from wave_backend.auth.roles import Role
 from wave_backend.models.database import get_db
 from wave_backend.schemas.schemas import (
     ExperimentColumnsResponse,
@@ -19,8 +21,11 @@ router = APIRouter(prefix="/api/v1/experiment-types", tags=["experiment-types"])
 
 
 @router.post("/", response_model=ExperimentTypeResponse)
+@auth.role(Role.RESEARCHER)
 async def create_experiment_type(
-    experiment_type: ExperimentTypeCreate, db: AsyncSession = Depends(get_db)
+    experiment_type: ExperimentTypeCreate,
+    db: AsyncSession = Depends(get_db),
+    auth: Tuple[str, Role] = None,  # noqa: F841
 ):
     """Create a new experiment type."""
     # Check if experiment type with same name or table_name already exists
@@ -38,7 +43,10 @@ async def create_experiment_type(
 
 
 @router.get("/{experiment_type_id}", response_model=ExperimentTypeResponse)
-async def get_experiment_type(experiment_type_id: int, db: AsyncSession = Depends(get_db)):
+@auth.role(Role.RESEARCHER)
+async def get_experiment_type(
+    experiment_type_id: int, db: AsyncSession = Depends(get_db), auth: Tuple[str, Role] = None
+):  # noqa: F841
     """Get an experiment type by ID."""
     db_experiment_type = await ExperimentTypeService.get_experiment_type(db, experiment_type_id)
     if not db_experiment_type:
@@ -47,10 +55,12 @@ async def get_experiment_type(experiment_type_id: int, db: AsyncSession = Depend
 
 
 @router.get("/", response_model=List[ExperimentTypeResponse])
+@auth.role(Role.RESEARCHER)
 async def get_experiment_types(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     db: AsyncSession = Depends(get_db),
+    auth: Tuple[str, Role] = None,  # noqa: F841
 ):
     """Get experiment types with pagination."""
     experiment_types = await ExperimentTypeService.get_experiment_types(db, skip=skip, limit=limit)
@@ -58,10 +68,12 @@ async def get_experiment_types(
 
 
 @router.put("/{experiment_type_id}", response_model=ExperimentTypeResponse)
+@auth.role(Role.RESEARCHER)
 async def update_experiment_type(
     experiment_type_id: int,
     experiment_type_update: ExperimentTypeUpdate,
     db: AsyncSession = Depends(get_db),
+    auth: Tuple[str, Role] = None,  # noqa: F841
 ):
     """Update an experiment type."""
     # If updating name, check for conflicts
@@ -83,7 +95,10 @@ async def update_experiment_type(
 
 
 @router.delete("/{experiment_type_id}")
-async def delete_experiment_type(experiment_type_id: int, db: AsyncSession = Depends(get_db)):
+@auth.role(Role.RESEARCHER)
+async def delete_experiment_type(
+    experiment_type_id: int, db: AsyncSession = Depends(get_db), auth: Tuple[str, Role] = None
+):  # noqa: F841
     """Delete an experiment type."""
     success = await ExperimentTypeService.delete_experiment_type(db, experiment_type_id)
     if not success:
@@ -92,8 +107,11 @@ async def delete_experiment_type(experiment_type_id: int, db: AsyncSession = Dep
 
 
 @router.get("/name/{experiment_type_name}/columns", response_model=ExperimentColumnsResponse)
+@auth.role(Role.RESEARCHER)
 async def get_experiment_type_columns(
-    experiment_type_name: str, db: AsyncSession = Depends(get_db)
+    experiment_type_name: str,
+    db: AsyncSession = Depends(get_db),
+    auth: Tuple[str, Role] = None,  # noqa: F841
 ):
     """Get column information for an experiment type."""
     columns_info = await ExperimentService.get_experiment_columns(

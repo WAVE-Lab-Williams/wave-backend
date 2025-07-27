@@ -78,8 +78,13 @@ setup-local-dev:
 	uv pip install -e .[dev,test]
 	@echo "Installing pre-commit hooks..."
 	uv run pre-commit install
-	@echo "Creating .env file from template..."
-	@if [ ! -f .env ]; then cp .env.example .env; echo ".env file created from template"; fi
+	@echo "Checking for .env file..."
+	@if [ -f .env ]; then \
+		echo "✓ .env file found - using existing configuration"; \
+	else \
+		cp .env.example .env; \
+		echo "✓ .env file created from template, please edit it to configure your environment"; \
+	fi
 	@echo "Local development environment ready!"
 
 # FastAPI Development Server
