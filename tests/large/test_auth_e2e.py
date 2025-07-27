@@ -360,10 +360,26 @@ class TestRealEndpointIntegration:
                 # Should get past auth (might fail on database connection, but not auth)
                 assert response.status_code != 403  # Auth passed
                 # We expect it might fail on DB connection (500) but not auth (403)
-            except OSError:
-                # Database connection failure is expected in large tests without DB setup
-                # The important thing is we got past auth validation (no 403 error)
-                pass
+            except Exception as e:
+                # Allow database-related errors that indicate auth passed but DB is unavailable
+                # This is expected in large tests without DB setup
+                from sqlalchemy.exc import DatabaseError, DisconnectionError
+
+                # Check for specific database-related exceptions or error messages
+                is_db_error = (
+                    isinstance(e, (OSError, DatabaseError, DisconnectionError))
+                    or "asyncpg.exceptions.undefinedtableerror" in str(e).lower()
+                    or "connect call failed" in str(e).lower()
+                )
+
+                if is_db_error:
+                    # Expected database error - auth validation passed successfully
+                    # We can see in logs:
+                    # "Authorized access - Key ID: mock_researcher_key_id, Role: researcher"
+                    pass
+                else:
+                    # Unexpected error - re-raise it
+                    raise
 
 
 class TestConcurrentAuthRequests:

@@ -17,14 +17,14 @@ class Role(IntEnum):
     Hierarchy (ascending permission levels):
     - EXPERIMENTEE (1): Basic user, can participate in experiments
     - RESEARCHER (2): Can create and manage experiments
-    - TEST (3): Test/staging environment access
-    - ADMIN (4): Full system access and user management
+    - ADMIN (3): Full system access and user management
+    - TEST (4): Highest privilege test/staging environment access
     """
 
     EXPERIMENTEE = 1
     RESEARCHER = 2
-    TEST = 3
-    ADMIN = 4
+    ADMIN = 3
+    TEST = 4
 
     @classmethod
     def from_string(cls, role_str: str) -> "Role":

@@ -36,7 +36,7 @@ async def test_role_boundary_conditions(mock_unkey_client):
     """Test role checking at boundary conditions."""
 
     # Test each role boundary
-    role_hierarchy = [Role.EXPERIMENTEE, Role.RESEARCHER, Role.TEST, Role.ADMIN]
+    role_hierarchy = [Role.EXPERIMENTEE, Role.RESEARCHER, Role.ADMIN, Role.TEST]
 
     for i, user_role in enumerate(role_hierarchy):
         mock_unkey_client.validate_key.return_value = UnkeyValidationResult(

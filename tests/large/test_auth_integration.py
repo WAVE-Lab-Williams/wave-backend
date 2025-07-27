@@ -53,26 +53,12 @@ class TestAuthDecorators:
         assert result.role.can_access(Role.RESEARCHER)
 
     @pytest.mark.asyncio
-    async def test_auth_role_insufficient_permissions_real(
-        self, real_unkey_client: UnkeyClient, test_role_key: str
-    ):
-        """
-        Test @auth.role decorator with insufficient permissions
-        (real test key vs admin requirement).
-        """
-        # Test role should NOT have access to ADMIN endpoints
-        result = await real_unkey_client.validate_key(test_role_key, Role.ADMIN)
-        # The validation might succeed but role check should fail
-        if result.valid and result.role:
-            assert not result.role.can_access(Role.ADMIN)
-
-    @pytest.mark.asyncio
     async def test_auth_role_hierarchy_with_mocks(self, mock_auth_success):
         """Test role hierarchy enforcement using mocked scenarios."""
         # Test each role against its allowed access levels using mocks
         role_tests = [
-            ("test_admin", Role.ADMIN, [Role.ADMIN, Role.TEST, Role.RESEARCHER, Role.EXPERIMENTEE]),
-            ("test_test", Role.TEST, [Role.TEST, Role.RESEARCHER, Role.EXPERIMENTEE]),
+            ("test_admin", Role.ADMIN, [Role.ADMIN, Role.RESEARCHER, Role.EXPERIMENTEE]),
+            ("test_test", Role.TEST, [Role.TEST, Role.ADMIN, Role.RESEARCHER, Role.EXPERIMENTEE]),
             ("test_researcher", Role.RESEARCHER, [Role.RESEARCHER, Role.EXPERIMENTEE]),
             ("test_experimentee", Role.EXPERIMENTEE, [Role.EXPERIMENTEE]),
         ]
@@ -90,29 +76,12 @@ class TestAuthDecorators:
                 assert role.can_access(allowed_role), f"{role} should access {allowed_role}"
 
     @pytest.mark.asyncio
-    async def test_auth_role_with_insufficient_permissions(
-        self, real_unkey_client: UnkeyClient, test_keys: dict
-    ):
-        """Test @auth.role decorator with insufficient permissions."""
-        if not test_keys.get("test"):
-            pytest.skip("WAVE_API_KEY not available for real integration test")
-
-        # Test key (with TEST role) should NOT have access to ADMIN endpoints
-        result = await real_unkey_client.validate_key(test_keys["test"], Role.ADMIN)
-        # Note: This depends on Unkey configuration
-        # Might still be valid but role check happens in decorator
-        if result.valid and result.role:
-            assert not result.role.can_access(
-                Role.ADMIN
-            ), f"Test role {result.role} should not have admin access"
-
-    @pytest.mark.asyncio
     async def test_auth_role_hierarchy(self, real_unkey_client: UnkeyClient, test_keys: dict):
         """Test role hierarchy enforcement."""
         # Test each role against its allowed access levels
         role_tests = [
-            ("admin", Role.ADMIN, [Role.ADMIN, Role.TEST, Role.RESEARCHER, Role.EXPERIMENTEE]),
-            ("test", Role.TEST, [Role.TEST, Role.RESEARCHER, Role.EXPERIMENTEE]),
+            ("admin", Role.ADMIN, [Role.ADMIN, Role.RESEARCHER, Role.EXPERIMENTEE]),
+            ("test", Role.TEST, [Role.TEST, Role.ADMIN, Role.RESEARCHER, Role.EXPERIMENTEE]),
             ("researcher", Role.RESEARCHER, [Role.RESEARCHER, Role.EXPERIMENTEE]),
             ("experimentee", Role.EXPERIMENTEE, [Role.EXPERIMENTEE]),
         ]
