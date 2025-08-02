@@ -53,7 +53,7 @@ router = APIRouter(prefix="/api/v1/experiment-data", tags=["experiment-data"])
         }
     },
 )
-@auth.role(Role.RESEARCHER)
+@auth.role(Role.EXPERIMENTEE)
 async def create_experiment_data(
     experiment_id: UUID,
     data: ExperimentDataCreate,
