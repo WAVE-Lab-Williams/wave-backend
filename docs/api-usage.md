@@ -513,3 +513,136 @@ The Swagger UI provides:
 Use the interactive documentation to explore the API and test endpoints with sample data.
 
 </details>
+
+<details>
+<summary><strong>API Versioning & Client Compatibility</strong></summary>
+
+The WAVE Backend API implements automatic version compatibility checking between client libraries and the server. This ensures smooth operation across different client and server versions while providing warnings for potential incompatibilities.
+
+### How Versioning Works
+
+**1. Version Headers**
+- **Client Request**: Include `X-WAVE-Client-Version` header with your client library version
+- **Server Response**: All responses include `X-WAVE-API-Version` header with current API version
+- **Example**: `X-WAVE-Client-Version: 1.0.0` → Server responds with `X-WAVE-API-Version: 1.0.1`
+
+**2. Compatibility Rules (Semantic Versioning)**
+- ✅ **Compatible**: Same major version (1.0.0 ↔ 1.5.0)
+- ❌ **Incompatible**: Different major versions (1.0.0 ↔ 2.0.0)
+- **Forward Compatible**: Older clients work with newer API minor/patch versions
+- **Backward Compatible**: Newer minor/patch versions work with older APIs
+
+**3. Non-Blocking Warnings**
+- Incompatible versions generate server-side log warnings
+- Requests are never blocked due to version mismatches
+- Graceful degradation ensures continued operation
+
+### Version Information Endpoint
+
+**GET `/version`**
+
+Get detailed version compatibility information:
+
+```bash
+curl -H "X-WAVE-Client-Version: 1.0.0" http://localhost:8000/version
+```
+
+**Response (Compatible Versions):**
+```json
+{
+  "api_version": "1.0.1",
+  "client_version": "1.0.0",
+  "compatible": true,
+  "compatibility_rule": "Semantic versioning: same major version = compatible"
+}
+```
+
+**Response (Incompatible Versions):**
+```json
+{
+  "api_version": "2.0.0",
+  "client_version": "1.0.0",
+  "compatible": false,
+  "compatibility_rule": "Semantic versioning: same major version = compatible",
+  "warning": "Major version mismatch: Client v1.0.0 may not be compatible with API v2.0.0. Consider upgrading your client library."
+}
+```
+
+**Response (No Client Version Header):**
+```json
+{
+  "api_version": "1.0.0",
+  "client_version": null,
+  "compatibility_rule": "Semantic versioning: same major version = compatible",
+  "message": "No client version provided. Add X-WAVE-Client-Version header for compatibility checking."
+}
+```
+
+### Client Implementation Examples
+
+**Python (requests library):**
+```python
+import requests
+
+headers = {"X-WAVE-Client-Version": "1.0.0"}
+response = requests.get("http://localhost:8000/api/v1/experiments/", headers=headers)
+
+# Check API version in response
+api_version = response.headers.get("X-WAVE-API-Version")
+print(f"API Version: {api_version}")
+```
+
+**JavaScript (fetch API):**
+```javascript
+const headers = {
+  "X-WAVE-Client-Version": "1.0.0",
+  "Content-Type": "application/json"
+};
+
+fetch("http://localhost:8000/api/v1/experiments/", { headers })
+  .then(response => {
+    console.log("API Version:", response.headers.get("X-WAVE-API-Version"));
+    return response.json();
+  });
+```
+
+**cURL:**
+```bash
+curl -H "X-WAVE-Client-Version: 1.0.0" \
+     -H "Content-Type: application/json" \
+     http://localhost:8000/api/v1/experiments/
+```
+
+### Version Compatibility Matrix
+
+| Client Version | API Version | Compatible | Notes                    |
+| -------------- | ----------- | ---------- | ------------------------ |
+| 1.0.0          | 1.0.0       | ✅          | Exact match              |
+| 1.0.0          | 1.0.1       | ✅          | Patch update             |
+| 1.0.0          | 1.1.0       | ✅          | Minor update             |
+| 1.2.0          | 1.0.0       | ✅          | Client ahead (minor)     |
+| 1.0.0          | 2.0.0       | ❌          | Major version difference |
+| 2.1.0          | 1.9.0       | ❌          | Different major versions |
+
+### CORS Support
+
+The versioning headers are automatically exposed for browser-based clients:
+- `Access-Control-Expose-Headers` includes `X-WAVE-API-Version`
+- Cross-origin requests can access version information
+- No additional CORS configuration needed
+
+### Monitoring & Logging
+
+**Server-side logging automatically tracks:**
+- Version compatibility status for all requests
+- Client library adoption across your user base
+- Potential compatibility issues before they become problems
+
+**Log Examples:**
+```
+INFO: Compatible versions: Client v1.0.0, API v1.0.1
+WARNING: Version compatibility: Major version mismatch: Client v1.0.0 may not be compatible with API v2.0.0...
+DEBUG: User agent: wave-python-client/1.0.0
+```
+
+</details>
