@@ -97,15 +97,15 @@ dev-db: podman-check
 	@echo "Starting development PostgreSQL database..."
 	$(COMPOSE_CMD) up -d postgres
 
-dev-db-stop:
+dev-db-stop: podman-check
 	@echo "Stopping development PostgreSQL database..."
 	$(COMPOSE_CMD) down
 
-dev-db-logs:
+dev-db-logs: podman-check
 	@echo "Showing PostgreSQL database logs..."
 	$(COMPOSE_CMD) logs -f postgres
 
-dev-db-reset: dev-db-stop
+dev-db-reset: podman-check dev-db-stop
 	@echo "Resetting development database (removing volumes)..."
 	$(COMPOSE_CMD) down -v
 	$(COMPOSE_CMD) up -d postgres
@@ -115,20 +115,20 @@ test-db: podman-check
 	@echo "Starting test PostgreSQL database..."
 	$(COMPOSE_CMD) --profile test up -d postgres-test
 
-test-db-stop:
+test-db-stop: podman-check
 	@echo "Stopping test PostgreSQL database..."
 	$(COMPOSE_CMD) --profile test down
 
-test-db-reset: test-db-stop
+test-db-reset: podman-check test-db-stop
 	@echo "Resetting test database (removing volumes)..."
 	$(COMPOSE_CMD) --profile test down -v
 	$(COMPOSE_CMD) --profile test up -d postgres-test
 
 # Combined Database Commands
-db-stop: dev-db-stop test-db-stop
+db-stop: podman-check dev-db-stop test-db-stop
 	@echo "All databases stopped"
 
-db-reset: dev-db-stop test-db-stop
+db-reset: podman-check dev-db-stop test-db-stop
 	@echo "Resetting both development and test databases (removing volumes)..."
 	$(COMPOSE_CMD) down -v
 	$(COMPOSE_CMD) --profile test down -v
@@ -145,11 +145,11 @@ dev: dev-db
 	@sleep 5
 	@$(MAKE) serve
 
-dev-stop: dev-db-stop
+dev-stop: podman-check dev-db-stop
 	@echo "Development environment stopped"
 
 # Complete shutdown - stops everything
-shutdown: 
+shutdown: podman-check 
 	@echo "Shutting down all development services..."
 	@echo "Stopping FastAPI server (if running)..."
 	@pkill -f "uvicorn wave_backend.api.main:app" || true
