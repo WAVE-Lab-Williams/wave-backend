@@ -4,9 +4,11 @@ FastAPI main application module.
 
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Optional
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Header
 
+from wave_backend.api.middleware.versioning import VersioningMiddleware
 from wave_backend.api.routes import (
     experiment_data,
     experiment_types,
@@ -17,6 +19,11 @@ from wave_backend.api.routes import (
 from wave_backend.models.database import engine
 from wave_backend.models.models import Base
 from wave_backend.utils.logging import get_logger
+from wave_backend.utils.versioning import (
+    API_VERSION,
+    get_compatibility_warning,
+    is_compatible_version,
+)
 
 logger = get_logger(__name__)
 
@@ -55,9 +62,12 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="WAVE Backend API",
     description=load_api_description(),
-    version="0.1.0",
+    version=API_VERSION,
     lifespan=lifespan,
 )
+
+# Add versioning middleware
+app.add_middleware(VersioningMiddleware)
 
 # Include routers - order determines Swagger UI display order
 app.include_router(experiment_types.router)  # 1st: Create experiment types
@@ -71,10 +81,49 @@ app.include_router(search.router)  # 5th: Search and query endpoints
 async def root():
     """API root endpoint providing welcome information."""
     logger.info("API root endpoint accessed")
-    return {"message": "Welcome to the WAVE Backend API", "version": "0.1.0"}
+    return {"message": "Welcome to the WAVE Backend API", "version": API_VERSION}
 
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
     return {"status": "healthy", "service": "wave-backend"}
+
+
+@app.get(
+    "/version",
+    summary="Version Information",
+    description="Get API version and client compatibility information",
+)
+async def version_info(
+    x_wave_client_version: Optional[str] = Header(None, alias="X-WAVE-Client-Version")
+):
+    """
+    Get version information and compatibility status.
+
+    Uses semantic versioning for compatibility checking:
+    - Same major version = compatible (1.x.x ↔ 1.y.z)
+    - Different major version = incompatible (1.x.x ↔ 2.y.z)
+
+    Args:
+        x_wave_client_version: Client version from header (optional)
+
+    Returns:
+        Version information and compatibility status
+    """
+    response = {
+        "api_version": API_VERSION,
+        "client_version": x_wave_client_version,
+        "compatibility_rule": "Semantic versioning: same major version = compatible",
+    }
+
+    if x_wave_client_version:
+        response["compatible"] = is_compatible_version(x_wave_client_version, API_VERSION)
+        warning = get_compatibility_warning(x_wave_client_version, API_VERSION)
+        if warning:
+            response["warning"] = warning
+    else:
+        response["compatible"] = None
+        response["warning"] = "No client version provided"
+
+    return response
