@@ -79,7 +79,7 @@ async def update_tag(
 
 
 @router.delete("/{tag_id}")
-@auth.role(Role.RESEARCHER)
+@auth.role(Role.ADMIN)
 async def delete_tag(
     tag_id: int, db: AsyncSession = Depends(get_db), auth: Tuple[str, Role] = None
 ):  # noqa: F841

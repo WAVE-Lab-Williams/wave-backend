@@ -352,7 +352,7 @@ async def update_experiment_data(
     summary="Delete experiment data row",
     description="Delete a specific experiment data row by its ID.",
 )
-@auth.role(Role.RESEARCHER)
+@auth.role(Role.ADMIN)
 async def delete_experiment_data(
     experiment_id: UUID,
     row_id: int,

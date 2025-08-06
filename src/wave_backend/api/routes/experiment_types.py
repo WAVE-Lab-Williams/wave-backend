@@ -95,7 +95,7 @@ async def update_experiment_type(
 
 
 @router.delete("/{experiment_type_id}")
-@auth.role(Role.RESEARCHER)
+@auth.role(Role.ADMIN)
 async def delete_experiment_type(
     experiment_type_id: int, db: AsyncSession = Depends(get_db), auth: Tuple[str, Role] = None
 ):  # noqa: F841
