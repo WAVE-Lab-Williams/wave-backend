@@ -9,7 +9,10 @@ DATABASE_URL = os.getenv(
     "DATABASE_URL", "postgresql+asyncpg://wave_user:wave_password@localhost:5432/wave_dev"
 )
 
-engine = create_async_engine(DATABASE_URL, echo=True)
+# Control SQLAlchemy echo via environment variable (defaults to False for less verbosity)
+SQLALCHEMY_ECHO = os.getenv("SQLALCHEMY_ECHO", "false").lower() in ("true", "1", "yes")
+
+engine = create_async_engine(DATABASE_URL, echo=SQLALCHEMY_ECHO)
 AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
