@@ -37,9 +37,17 @@ def get_auth_config() -> AuthConfig:
     Raises:
         ValueError: If required environment variables are missing or invalid
     """
+    # Check for required environment variable first
+    root_key = os.getenv("ROOT_VALIDATOR_KEY", "")
+    if not root_key:
+        raise ValueError(
+            "MISSING ROOT_VALIDATOR_KEY: The ROOT_VALIDATOR_KEY environment variable must be set. "
+            "This should be your Unkey root API key with 'api.*.verify_key' permission."
+        )
+
     try:
         config_data = {
-            "api_key": os.getenv("ROOT_VALIDATOR_KEY", ""),
+            "api_key": root_key,
         }
 
         # Only set optional fields if environment variable exists
