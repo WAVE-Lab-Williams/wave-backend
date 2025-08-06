@@ -10,7 +10,6 @@ class AuthConfig(BaseModel):
     """Authentication configuration with validation."""
 
     api_key: str = Field(..., min_length=1, description="Unkey root API key for validation")
-    app_id: str = Field(..., min_length=1, description="Unkey application ID")
     cache_ttl_seconds: int = Field(
         default=300, description="Authentication cache TTL in seconds", gt=0, le=3600
     )
@@ -41,7 +40,6 @@ def get_auth_config() -> AuthConfig:
     try:
         config_data = {
             "api_key": os.getenv("WAVE_API_KEY", ""),
-            "app_id": os.getenv("WAVE_APP_ID", ""),
         }
 
         # Only set optional fields if environment variable exists

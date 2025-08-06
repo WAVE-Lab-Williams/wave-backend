@@ -62,18 +62,9 @@ def unkey_api_key() -> str:
 
 
 @pytest.fixture
-def unkey_app_id() -> str:
-    """Get Unkey App ID from environment."""
-    app_id = os.getenv("WAVE_APP_ID")
-    if not app_id:
-        pytest.skip("WAVE_APP_ID not set - skipping real Unkey integration tests")
-    return app_id
-
-
-@pytest.fixture
-def real_unkey_client(unkey_api_key: str, unkey_app_id: str) -> UnkeyClient:
+def real_unkey_client(unkey_api_key: str) -> UnkeyClient:
     """Create UnkeyClient with real credentials for integration testing."""
-    return UnkeyClient(unkey_api_key, unkey_app_id)
+    return UnkeyClient(unkey_api_key)
 
 
 class RedactedApiKey(str):
@@ -105,7 +96,6 @@ def test_keys() -> Dict[str, Optional[str]]:
     Other roles will be simulated via mocking for comprehensive testing"""
     return {
         "test": os.getenv("WAVE_API_KEY"),  # Main test key with "test" role
-        "test_app_id": os.getenv("WAVE_APP_ID"),  # App ID for test environment
         "invalid": "sk_invalid_key_12345",  # Always invalid key for negative testing
         "malformed": "invalid_format",  # Malformed key for edge case testing
     }

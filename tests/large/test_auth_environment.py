@@ -20,7 +20,6 @@ class TestProductionConfigurationScenarios:
         # Simulate typical production environment variables
         prod_env = {
             "WAVE_API_KEY": "sk_prod_1234567890abcdef",
-            "WAVE_APP_ID": "app_prod_abcd1234",
             "DATABASE_URL": "postgresql+asyncpg://user:pass@localhost:5432/wave_prod",
             "FASTAPI_HOST": "0.0.0.0",
             "FASTAPI_PORT": "8000",
@@ -37,19 +36,17 @@ class TestProductionConfigurationScenarios:
 
             client = get_unkey_client()
             assert client.api_key == "sk_prod_1234567890abcdef"
-            assert client.app_id == "app_prod_abcd1234"
 
     @pytest.mark.asyncio
     async def test_configuration_validation_with_real_requests(self, mocker):
         """Test that configuration works with actual API requests."""
         # This test requires valid test credentials
         api_key = os.getenv("WAVE_API_KEY")
-        app_id = os.getenv("WAVE_APP_ID")
 
-        if not api_key or not app_id:
+        if not api_key:
             pytest.skip("Real Unkey credentials not available")
 
-        with patch.dict(os.environ, {"WAVE_API_KEY": api_key, "WAVE_APP_ID": app_id}):
+        with patch.dict(os.environ, {"WAVE_API_KEY": api_key}):
             get_unkey_client.cache_clear()
 
             client = get_unkey_client()

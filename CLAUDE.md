@@ -148,19 +148,18 @@ async def admin_cleanup(
 The authentication system uses centralized configuration with validation via Pydantic.
 
 Required environment variables:
-- `WAVE_API_KEY`: Unkey root API key for validation (required, non-empty)
-- `WAVE_APP_ID`: Unkey application ID (required, non-empty)
+- `WAVE_API_KEY`: Unkey root API key for validation (required, non-empty, must have `api.*.verify_key` permission)
 
 Optional environment variables:
 - `WAVE_AUTH_CACHE_TTL`: Authentication cache TTL in seconds (default: 300, range: 1-3600)
-- `WAVE_AUTH_BASE_URL`: Unkey API base URL (default: "https://api.unkey.com")
+- `WAVE_AUTH_BASE_URL`: Unkey API base URL (default: "https://api.unkey.com/v2")
 - `WAVE_AUTH_TIMEOUT`: HTTP request timeout in seconds (default: 10.0, range: 0.1-60.0)
 
 ### Data Flow
 1. Client sends `Authorization: Bearer sk_abc123` header
 2. FastAPI dependency extracts token, checks TTL-based cache first
-3. If not cached or expired, calls Unkey API with httpx
-4. Unkey validates key and returns role/permissions information
+3. If not cached or expired, calls Unkey v2 API with root key authentication
+4. Unkey validates key and returns role/permissions information in nested format
 5. Successful validations are cached with configurable TTL (default 5 minutes)
 6. System checks if user's role meets minimum requirement (hierarchical: admin ≥ test ≥ researcher ≥ experimentee)
 7. Route executes if authorized, returns 401/403 if not
@@ -184,7 +183,7 @@ Optional environment variables:
 #### High Priority
 
 1. **Environment and CI/CD**:
-   - Add `WAVE_API_KEY` and `WAVE_APP_ID` to GitHub secrets
+   - Add `WAVE_API_KEY` to GitHub secrets (ensure it has `api.*.verify_key` permission)
    - Configure test environment with mock/test Unkey credentials
    - Add auth validation to CI pipeline
 

@@ -39,7 +39,7 @@ class TestUnkeyClientCaching:
 
     def test_cache_key_generation(self):
         """Test cache key generation with different parameters."""
-        client = UnkeyClient("test_api_key", "test_app_id", cache_ttl_seconds=300)
+        client = UnkeyClient("test_api_key", cache_ttl_seconds=300)
 
         key = "sk_abcdefghijklmnopqrstuvwxyz123456789"
 
@@ -53,7 +53,7 @@ class TestUnkeyClientCaching:
 
     def test_cache_result_successful(self):
         """Test caching of successful validation results."""
-        client = UnkeyClient("test_api_key", "test_app_id", cache_ttl_seconds=300)
+        client = UnkeyClient("test_api_key", cache_ttl_seconds=300)
 
         result = UnkeyValidationResult(valid=True, key_id="test_key", role=Role.RESEARCHER)
         cache_key = "test_cache_key"
@@ -70,7 +70,7 @@ class TestUnkeyClientCaching:
 
     def test_cache_result_unsuccessful_not_cached(self):
         """Test that unsuccessful validation results are not cached."""
-        client = UnkeyClient("test_api_key", "test_app_id", cache_ttl_seconds=300)
+        client = UnkeyClient("test_api_key", cache_ttl_seconds=300)
 
         result = UnkeyValidationResult(valid=False, error="Invalid key")
         cache_key = "test_cache_key"
@@ -84,7 +84,7 @@ class TestUnkeyClientCaching:
 
     def test_cache_expiration(self):
         """Test that expired cache entries are removed."""
-        client = UnkeyClient("test_api_key", "test_app_id", cache_ttl_seconds=0)
+        client = UnkeyClient("test_api_key", cache_ttl_seconds=0)
 
         result = UnkeyValidationResult(valid=True, key_id="test_key", role=Role.RESEARCHER)
         cache_key = "test_cache_key"
@@ -102,7 +102,7 @@ class TestUnkeyClientCaching:
 
     def test_clear_cache(self):
         """Test cache clearing functionality."""
-        client = UnkeyClient("test_api_key", "test_app_id", cache_ttl_seconds=300)
+        client = UnkeyClient("test_api_key", cache_ttl_seconds=300)
 
         result = UnkeyValidationResult(valid=True, key_id="test_key", role=Role.RESEARCHER)
 
@@ -120,7 +120,7 @@ class TestUnkeyClientCaching:
     @pytest.mark.asyncio
     async def test_validate_key_uses_cache(self):
         """Test that validate_key uses cached results when available."""
-        client = UnkeyClient("test_api_key", "test_app_id", cache_ttl_seconds=300)
+        client = UnkeyClient("test_api_key", cache_ttl_seconds=300)
 
         # First call - should make API request and cache result
         with patch.object(client, "_make_verify_request") as mock_request:
@@ -148,7 +148,7 @@ class TestUnkeyClientCaching:
     @pytest.mark.asyncio
     async def test_validate_key_different_roles_cached_separately(self):
         """Test that different required roles are cached separately."""
-        client = UnkeyClient("test_api_key", "test_app_id", cache_ttl_seconds=300)
+        client = UnkeyClient("test_api_key", cache_ttl_seconds=300)
 
         with patch.object(client, "_make_verify_request") as mock_request:
             mock_response = AsyncMock()
@@ -175,7 +175,7 @@ class TestUnkeyClientCaching:
     @pytest.mark.asyncio
     async def test_validate_key_error_not_cached(self):
         """Test that validation errors are not cached."""
-        client = UnkeyClient("test_api_key", "test_app_id", cache_ttl_seconds=300)
+        client = UnkeyClient("test_api_key", cache_ttl_seconds=300)
 
         with patch.object(client, "_make_verify_request") as mock_request:
             mock_request.side_effect = Exception("API Error")

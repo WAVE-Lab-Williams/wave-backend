@@ -83,14 +83,12 @@ class UnkeyClient:
     def __init__(
         self,
         api_key: str,
-        app_id: str,
         cache_ttl_seconds: int = 300,
         base_url: Optional[str] = None,
         timeout_seconds: float = 10.0,
     ):
         """Initialize Unkey client with API credentials and configuration."""
         self.api_key = api_key
-        self.app_id = app_id
         self.base_url = base_url if base_url is not None else get_auth_config().base_url
         self.cache_ttl_seconds = cache_ttl_seconds
         self.timeout_seconds = timeout_seconds
@@ -283,7 +281,6 @@ def get_unkey_client() -> UnkeyClient:
     config = get_auth_config()
     return UnkeyClient(
         api_key=config.api_key,
-        app_id=config.app_id,
         cache_ttl_seconds=config.cache_ttl_seconds,
         base_url=config.base_url,
         timeout_seconds=config.timeout_seconds,
