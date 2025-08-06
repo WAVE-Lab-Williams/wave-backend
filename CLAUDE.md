@@ -153,7 +153,7 @@ Required environment variables:
 
 Optional environment variables:
 - `WAVE_AUTH_CACHE_TTL`: Authentication cache TTL in seconds (default: 300, range: 1-3600)
-- `WAVE_AUTH_BASE_URL`: Unkey API base URL (default: "https://api.unkey.dev")
+- `WAVE_AUTH_BASE_URL`: Unkey API base URL (default: "https://api.unkey.com")
 - `WAVE_AUTH_TIMEOUT`: HTTP request timeout in seconds (default: 10.0, range: 0.1-60.0)
 
 ### Data Flow

@@ -72,7 +72,7 @@ class UnkeyClient:
         api_key: str,
         app_id: str,
         cache_ttl_seconds: int = 300,
-        base_url: str = "https://api.unkey.dev",
+        base_url: str = "https://api.unkey.com",
         timeout_seconds: float = 10.0,
     ):
         """Initialize Unkey client with API credentials and configuration."""
