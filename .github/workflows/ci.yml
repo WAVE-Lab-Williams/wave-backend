@@ -79,3 +79,4 @@ jobs:
           POSTGRES_PASSWORD: ${{ secrets.TEST_POSTGRES_PASSWORD }}
           POSTGRES_TEST_DB: ${{ secrets.TEST_POSTGRES_DB }}
           WAVE_API_KEY: ${{ secrets.WAVE_API_KEY }}
+          ROOT_VALIDATOR_KEY: ${{ secrets.ROOT_VALIDATOR_KEY }}
