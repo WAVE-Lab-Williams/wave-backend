@@ -1,18 +1,11 @@
 """Database configuration and connection."""
 
-import os
-
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql+asyncpg://wave_user:wave_password@localhost:5432/wave_dev"
-)
+from wave_backend.models.database_config import db_config
 
-# Control SQLAlchemy echo via environment variable (defaults to False for less verbosity)
-SQLALCHEMY_ECHO = os.getenv("SQLALCHEMY_ECHO", "false").lower() in ("true", "1", "yes")
-
-engine = create_async_engine(DATABASE_URL, echo=SQLALCHEMY_ECHO)
+engine = create_async_engine(db_config.get_database_url(), echo=db_config.echo)
 AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 

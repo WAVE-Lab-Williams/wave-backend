@@ -1,5 +1,3 @@
-import os
-
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -7,28 +5,14 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from wave_backend.api.main import app
 from wave_backend.auth.roles import Role
 from wave_backend.models.database import Base, get_db
-
-# Test database configuration - builds URL from environment variables
-# These match the environment variables set in CI and can be overridden locally
-POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
-POSTGRES_PORT = os.getenv("POSTGRES_TEST_PORT", "5433")
-POSTGRES_USER = os.getenv("POSTGRES_USER", "wave_user")
-POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "wave_password")
-POSTGRES_DB = os.getenv("POSTGRES_TEST_DB", "wave_test")
-
-TEST_DATABASE_URL = os.getenv(
-    "TEST_DATABASE_URL",
-    (
-        "postgresql+asyncpg://"
-        f"{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
-    ),
-)
+from wave_backend.models.database_config import db_config
 
 
 async def override_get_db():
     """Override database dependency for testing."""
     # Create engine and session inside the async function to avoid event loop issues
-    test_engine = create_async_engine(TEST_DATABASE_URL, echo=False)
+    test_database_url = db_config.get_database_url(test=True)
+    test_engine = create_async_engine(test_database_url, echo=False)
     TestSessionLocal = async_sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
 
     async with TestSessionLocal() as session:
@@ -79,7 +63,8 @@ def setup_test_database():
     import asyncio
 
     async def setup():
-        test_engine = create_async_engine(TEST_DATABASE_URL, echo=False)
+        test_database_url = db_config.get_database_url(test=True)
+        test_engine = create_async_engine(test_database_url, echo=False)
         async with test_engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
         await test_engine.dispose()
@@ -90,7 +75,8 @@ def setup_test_database():
 
     # Cleanup
     async def cleanup():
-        test_engine = create_async_engine(TEST_DATABASE_URL, echo=False)
+        test_database_url = db_config.get_database_url(test=True)
+        test_engine = create_async_engine(test_database_url, echo=False)
         async with test_engine.begin() as conn:
             await conn.run_sync(Base.metadata.drop_all)
         await test_engine.dispose()
@@ -107,7 +93,8 @@ def clean_database_between_tests():
 
     # Clean up after each test
     async def cleanup():
-        test_engine = create_async_engine(TEST_DATABASE_URL, echo=False)
+        test_database_url = db_config.get_database_url(test=True)
+        test_engine = create_async_engine(test_database_url, echo=False)
         async with test_engine.begin() as conn:
             from sqlalchemy import text
 
@@ -133,7 +120,8 @@ async def async_client():
 @pytest.fixture
 async def db_session():
     """Provide a database session for service tests."""
-    test_engine = create_async_engine(TEST_DATABASE_URL, echo=False)
+    test_database_url = db_config.get_database_url(test=True)
+    test_engine = create_async_engine(test_database_url, echo=False)
     TestSessionLocal = async_sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
 
     async with TestSessionLocal() as session:
