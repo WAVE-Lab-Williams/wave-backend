@@ -23,7 +23,7 @@ async def test_unkey_client_caching():
     get_unkey_client.cache_clear()
 
     # Set environment variables for test
-    with patch.dict("os.environ", {"WAVE_API_KEY": "test_key"}):
+    with patch.dict("os.environ", {"ROOT_VALIDATOR_KEY": "test_key"}):
         client1 = get_unkey_client()
         client2 = get_unkey_client()
 

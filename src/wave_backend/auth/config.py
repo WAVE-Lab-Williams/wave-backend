@@ -39,7 +39,7 @@ def get_auth_config() -> AuthConfig:
     """
     try:
         config_data = {
-            "api_key": os.getenv("WAVE_API_KEY", ""),
+            "api_key": os.getenv("ROOT_VALIDATOR_KEY", ""),
         }
 
         # Only set optional fields if environment variable exists

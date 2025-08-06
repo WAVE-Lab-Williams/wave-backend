@@ -1,8 +1,19 @@
+import os
+from unittest.mock import patch
+
 import pytest
 from fastapi.testclient import TestClient
 
 from wave_backend.api.main import app
 from wave_backend.auth.roles import Role
+from wave_backend.auth.unkey_client import UnkeyClient
+
+
+@pytest.fixture
+def unkey_client():
+    """Fixture providing UnkeyClient for unit tests."""
+    with patch.dict(os.environ, {"ROOT_VALIDATOR_KEY": "test_root_key"}):
+        return UnkeyClient("test_api_key", cache_ttl_seconds=300)
 
 
 @pytest.fixture

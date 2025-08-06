@@ -6,11 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from wave_backend.auth.roles import Role
-from wave_backend.auth.unkey_client import (
-    CachedValidationResult,
-    UnkeyClient,
-    UnkeyValidationResult,
-)
+from wave_backend.auth.unkey_client import CachedValidationResult, UnkeyValidationResult
 
 
 class TestCachedValidationResult:
@@ -37,9 +33,9 @@ class TestCachedValidationResult:
 class TestUnkeyClientCaching:
     """Test UnkeyClient caching functionality."""
 
-    def test_cache_key_generation(self):
+    def test_cache_key_generation(self, unkey_client):
         """Test cache key generation with different parameters."""
-        client = UnkeyClient("test_api_key", cache_ttl_seconds=300)
+        client = unkey_client
 
         key = "sk_abcdefghijklmnopqrstuvwxyz123456789"
 
@@ -51,9 +47,9 @@ class TestUnkeyClientCaching:
         cache_key2 = client._get_cache_key(key, Role.RESEARCHER)
         assert cache_key2 == "sk_abcde...23456789:researcher"
 
-    def test_cache_result_successful(self):
+    def test_cache_result_successful(self, unkey_client):
         """Test caching of successful validation results."""
-        client = UnkeyClient("test_api_key", cache_ttl_seconds=300)
+        client = unkey_client
 
         result = UnkeyValidationResult(valid=True, key_id="test_key", role=Role.RESEARCHER)
         cache_key = "test_cache_key"
@@ -68,9 +64,9 @@ class TestUnkeyClientCaching:
         assert cached_result.key_id == "test_key"
         assert cached_result.role == Role.RESEARCHER
 
-    def test_cache_result_unsuccessful_not_cached(self):
+    def test_cache_result_unsuccessful_not_cached(self, unkey_client):
         """Test that unsuccessful validation results are not cached."""
-        client = UnkeyClient("test_api_key", cache_ttl_seconds=300)
+        client = unkey_client
 
         result = UnkeyValidationResult(valid=False, error="Invalid key")
         cache_key = "test_cache_key"
@@ -82,9 +78,11 @@ class TestUnkeyClientCaching:
         cached_result = client._get_cached_result(cache_key)
         assert cached_result is None
 
-    def test_cache_expiration(self):
+    def test_cache_expiration(self, unkey_client):
         """Test that expired cache entries are removed."""
-        client = UnkeyClient("test_api_key", cache_ttl_seconds=0)
+        client = unkey_client
+        # Override TTL for this test
+        client.cache_ttl_seconds = 0
 
         result = UnkeyValidationResult(valid=True, key_id="test_key", role=Role.RESEARCHER)
         cache_key = "test_cache_key"
@@ -100,9 +98,9 @@ class TestUnkeyClientCaching:
         assert cached_result is None
         assert cache_key not in client._validation_cache
 
-    def test_clear_cache(self):
+    def test_clear_cache(self, unkey_client):
         """Test cache clearing functionality."""
-        client = UnkeyClient("test_api_key", cache_ttl_seconds=300)
+        client = unkey_client
 
         result = UnkeyValidationResult(valid=True, key_id="test_key", role=Role.RESEARCHER)
 
@@ -118,9 +116,9 @@ class TestUnkeyClientCaching:
         assert len(client._validation_cache) == 0
 
     @pytest.mark.asyncio
-    async def test_validate_key_uses_cache(self):
+    async def test_validate_key_uses_cache(self, unkey_client):
         """Test that validate_key uses cached results when available."""
-        client = UnkeyClient("test_api_key", cache_ttl_seconds=300)
+        client = unkey_client
 
         # First call - should make API request and cache result
         with patch.object(client, "_make_verify_request") as mock_request:
@@ -146,9 +144,9 @@ class TestUnkeyClientCaching:
             assert mock_request2.call_count == 0  # No API call made
 
     @pytest.mark.asyncio
-    async def test_validate_key_different_roles_cached_separately(self):
+    async def test_validate_key_different_roles_cached_separately(self, unkey_client):
         """Test that different required roles are cached separately."""
-        client = UnkeyClient("test_api_key", cache_ttl_seconds=300)
+        client = unkey_client
 
         with patch.object(client, "_make_verify_request") as mock_request:
             mock_response = AsyncMock()
@@ -173,9 +171,9 @@ class TestUnkeyClientCaching:
             assert len(client._validation_cache) == 3
 
     @pytest.mark.asyncio
-    async def test_validate_key_error_not_cached(self):
+    async def test_validate_key_error_not_cached(self, unkey_client):
         """Test that validation errors are not cached."""
-        client = UnkeyClient("test_api_key", cache_ttl_seconds=300)
+        client = unkey_client
 
         with patch.object(client, "_make_verify_request") as mock_request:
             mock_request.side_effect = Exception("API Error")

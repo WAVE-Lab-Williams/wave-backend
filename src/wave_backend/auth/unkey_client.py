@@ -1,4 +1,53 @@
-"""Unkey API client for key validation using REST API with Pydantic models."""
+"""
+Unkey API client for secure two-key authentication system.
+
+This module implements a secure two-key authentication architecture using Unkey's v2 API.
+
+## Architecture Overview
+
+The WAVE backend uses a dual-key system for secure API access:
+
+1. **ROOT_VALIDATOR_KEY** (Backend Secret):
+   - Stored in backend environment as ROOT_VALIDATOR_KEY
+   - Has 'api.*.verify_key' permission in Unkey workspace
+   - Used in Authorization header to authenticate backend TO Unkey's API
+   - Never exposed to clients or frontend applications
+   - Cannot and should not be used for user operations
+
+2. **User API Keys** (Client Tokens):
+   - Distributed to users/clients (e.g., WAVE_API_KEY for development)
+   - Do NOT have 'api.*.verify_key' permission
+   - Have role-based permissions (experimentee, researcher, test, admin)
+   - Sent by clients in Authorization: Bearer headers
+   - Placed in request body for validation by Unkey API
+
+## Authentication Flow
+
+When a client makes an authenticated request:
+
+1. Client sends `Authorization: Bearer <user_api_key>` to WAVE backend
+2. Backend extracts user's API key from client's Authorization header
+3. Backend calls Unkey API with:
+   - Header: `Authorization: Bearer <ROOT_VALIDATOR_KEY>` (authenticates backend)
+   - Body: `{"key": "<user_api_key>"}` (user's key to validate)
+4. Unkey validates the user's key and returns the user's role/permissions
+5. Backend makes authorization decisions based on USER'S role (not root key permissions)
+
+## Security Benefits
+
+- User keys cannot validate other keys (no 'api.*.verify_key' permission)
+- Root key stays secure on backend, never exposed to clients
+- Even if user key is compromised, it cannot perform validation operations
+- Proper role-based access control with hierarchical permissions
+- Defense in depth through key separation
+
+## Performance Features
+
+- TTL-based caching reduces API calls to Unkey
+- Role-specific cache keys for granular caching
+- Automatic cache expiration and cleanup
+- Configurable timeouts and retry logic
+"""
 
 import time
 from functools import lru_cache

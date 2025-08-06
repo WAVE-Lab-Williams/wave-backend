@@ -54,17 +54,29 @@ async def mock_validate(key: str, required_role: Optional[Role] = None):
 
 @pytest.fixture
 def unkey_api_key() -> str:
-    """Get Unkey API key from environment."""
-    api_key = os.getenv("WAVE_API_KEY")
+    """Get Unkey root validator key from environment."""
+    api_key = os.getenv("ROOT_VALIDATOR_KEY")
     if not api_key:
-        pytest.skip("WAVE_API_KEY not set - skipping real Unkey integration tests")
+        pytest.skip("ROOT_VALIDATOR_KEY not set - skipping real Unkey integration tests")
     return api_key
 
 
 @pytest.fixture
-def real_unkey_client(unkey_api_key: str) -> UnkeyClient:
-    """Create UnkeyClient with real credentials for integration testing."""
-    return UnkeyClient(unkey_api_key)
+def user_api_key() -> str:
+    """Get user API key for cross-validation testing."""
+    api_key = os.getenv("WAVE_API_KEY")
+    if not api_key:
+        pytest.skip("WAVE_API_KEY not set - skipping cross-validation tests")
+    return api_key
+
+
+@pytest.fixture
+def real_unkey_client() -> UnkeyClient:
+    """Create UnkeyClient with real root validator key for integration testing."""
+    root_key = os.getenv("ROOT_VALIDATOR_KEY")
+    if not root_key:
+        pytest.skip("ROOT_VALIDATOR_KEY not set - skipping real Unkey integration tests")
+    return UnkeyClient(root_key)
 
 
 class RedactedApiKey(str):

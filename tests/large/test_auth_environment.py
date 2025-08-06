@@ -19,7 +19,7 @@ class TestProductionConfigurationScenarios:
         """Simulate loading configuration from .env file."""
         # Simulate typical production environment variables
         prod_env = {
-            "WAVE_API_KEY": "sk_prod_1234567890abcdef",
+            "ROOT_VALIDATOR_KEY": "sk_prod_1234567890abcdef",
             "DATABASE_URL": "postgresql+asyncpg://user:pass@localhost:5432/wave_prod",
             "FASTAPI_HOST": "0.0.0.0",
             "FASTAPI_PORT": "8000",
@@ -46,7 +46,7 @@ class TestProductionConfigurationScenarios:
         if not api_key:
             pytest.skip("Real Unkey credentials not available")
 
-        with patch.dict(os.environ, {"WAVE_API_KEY": api_key}):
+        with patch.dict(os.environ, {"ROOT_VALIDATOR_KEY": api_key}):
             get_unkey_client.cache_clear()
 
             client = get_unkey_client()
