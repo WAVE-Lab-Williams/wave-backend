@@ -125,12 +125,13 @@ class TestUnkeyClientCaching:
         # First call - should make API request and cache result
         with patch.object(client, "_make_verify_request") as mock_request:
             mock_response = AsyncMock()
-            mock_response.valid = True
-            mock_response.key_id = "test_key"
-            mock_response.roles = ["researcher"]
-            mock_response.permissions = None
-            mock_response.meta = None
-            mock_response.identity = None
+            mock_response.data = AsyncMock()
+            mock_response.data.valid = True
+            mock_response.data.key_id = "test_key"
+            mock_response.data.roles = ["researcher"]
+            mock_response.data.permissions = None
+            mock_response.data.meta = None
+            mock_response.data.identity = None
             mock_request.return_value = mock_response
 
             result1 = await client.validate_key("test_key")
@@ -151,12 +152,13 @@ class TestUnkeyClientCaching:
 
         with patch.object(client, "_make_verify_request") as mock_request:
             mock_response = AsyncMock()
-            mock_response.valid = True
-            mock_response.key_id = "test_key"
-            mock_response.roles = ["researcher"]
-            mock_response.permissions = None
-            mock_response.meta = None
-            mock_response.identity = None
+            mock_response.data = AsyncMock()
+            mock_response.data.valid = True
+            mock_response.data.key_id = "test_key"
+            mock_response.data.roles = ["researcher"]
+            mock_response.data.permissions = None
+            mock_response.data.meta = None
+            mock_response.data.identity = None
             mock_request.return_value = mock_response
 
             # Call with different required roles

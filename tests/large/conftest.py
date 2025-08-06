@@ -76,17 +76,27 @@ def real_unkey_client(unkey_api_key: str, unkey_app_id: str) -> UnkeyClient:
     return UnkeyClient(unkey_api_key, unkey_app_id)
 
 
+class RedactedApiKey(str):
+    """API key wrapper that redacts the key in string representation."""
+
+    def __repr__(self) -> str:
+        return f"'{self[:8]}...{self[-4:]}'" if len(self) > 12 else "'[REDACTED]'"
+
+    def __str__(self) -> str:
+        return f"{self[:8]}...{self[-4:]}" if len(self) > 12 else "[REDACTED]"
+
+
 @pytest.fixture
-def test_role_key() -> str:
+def test_role_key() -> RedactedApiKey:
     """Get the real test role API key from environment.
 
     This fixture provides the actual API key that should have 'test' role
-    in the Unkey system.
+    in the Unkey system. The key is redacted in test output for security.
     """
     api_key = os.getenv("WAVE_API_KEY")
     if not api_key:
         pytest.skip("WAVE_API_KEY not set - skipping real integration tests")
-    return api_key
+    return RedactedApiKey(api_key)
 
 
 @pytest.fixture

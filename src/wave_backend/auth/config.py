@@ -3,7 +3,7 @@
 import os
 from functools import lru_cache
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class AuthConfig(BaseModel):
@@ -14,10 +14,16 @@ class AuthConfig(BaseModel):
     cache_ttl_seconds: int = Field(
         default=300, description="Authentication cache TTL in seconds", gt=0, le=3600
     )
-    base_url: str = Field(default="https://api.unkey.com", description="Unkey API base URL")
+    base_url: str = Field(default="https://api.unkey.com/v2", description="Unkey API base URL")
     timeout_seconds: float = Field(
         default=10.0, description="HTTP request timeout in seconds", gt=0, le=60.0
     )
+
+    @field_validator("base_url")
+    @classmethod
+    def remove_trailing_slash(cls, v: str) -> str:
+        """Remove trailing slash from base URL for proper concatenation."""
+        return v.rstrip("/")
 
 
 @lru_cache(maxsize=1)
@@ -33,12 +39,19 @@ def get_auth_config() -> AuthConfig:
         ValueError: If required environment variables are missing or invalid
     """
     try:
-        return AuthConfig(
-            api_key=os.getenv("WAVE_API_KEY", ""),
-            app_id=os.getenv("WAVE_APP_ID", ""),
-            cache_ttl_seconds=int(os.getenv("WAVE_AUTH_CACHE_TTL", "300")),
-            base_url=os.getenv("WAVE_AUTH_BASE_URL", "https://api.unkey.com"),
-            timeout_seconds=float(os.getenv("WAVE_AUTH_TIMEOUT", "10.0")),
-        )
+        config_data = {
+            "api_key": os.getenv("WAVE_API_KEY", ""),
+            "app_id": os.getenv("WAVE_APP_ID", ""),
+        }
+
+        # Only set optional fields if environment variable exists
+        if cache_ttl := os.getenv("WAVE_AUTH_CACHE_TTL"):
+            config_data["cache_ttl_seconds"] = int(cache_ttl)
+        if base_url := os.getenv("WAVE_AUTH_BASE_URL"):
+            config_data["base_url"] = base_url
+        if timeout := os.getenv("WAVE_AUTH_TIMEOUT"):
+            config_data["timeout_seconds"] = float(timeout)
+
+        return AuthConfig(**config_data)
     except (ValueError, TypeError) as e:
         raise ValueError(f"Invalid authentication configuration: {e}")
