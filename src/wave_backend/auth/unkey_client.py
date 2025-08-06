@@ -1,4 +1,53 @@
-"""Unkey API client for key validation using REST API with Pydantic models."""
+"""
+Unkey API client for secure two-key authentication system.
+
+This module implements a secure two-key authentication architecture using Unkey's v2 API.
+
+## Architecture Overview
+
+The WAVE backend uses a dual-key system for secure API access:
+
+1. **ROOT_VALIDATOR_KEY** (Backend Secret):
+   - Stored in backend environment as ROOT_VALIDATOR_KEY
+   - Has 'api.*.verify_key' permission in Unkey workspace
+   - Used in Authorization header to authenticate backend TO Unkey's API
+   - Never exposed to clients or frontend applications
+   - Cannot and should not be used for user operations
+
+2. **User API Keys** (Client Tokens):
+   - Distributed to users/clients (e.g., WAVE_API_KEY for development)
+   - Do NOT have 'api.*.verify_key' permission
+   - Have role-based permissions (experimentee, researcher, test, admin)
+   - Sent by clients in Authorization: Bearer headers
+   - Placed in request body for validation by Unkey API
+
+## Authentication Flow
+
+When a client makes an authenticated request:
+
+1. Client sends `Authorization: Bearer <user_api_key>` to WAVE backend
+2. Backend extracts user's API key from client's Authorization header
+3. Backend calls Unkey API with:
+   - Header: `Authorization: Bearer <ROOT_VALIDATOR_KEY>` (authenticates backend)
+   - Body: `{"key": "<user_api_key>"}` (user's key to validate)
+4. Unkey validates the user's key and returns the user's role/permissions
+5. Backend makes authorization decisions based on USER'S role (not root key permissions)
+
+## Security Benefits
+
+- User keys cannot validate other keys (no 'api.*.verify_key' permission)
+- Root key stays secure on backend, never exposed to clients
+- Even if user key is compromised, it cannot perform validation operations
+- Proper role-based access control with hierarchical permissions
+- Defense in depth through key separation
+
+## Performance Features
+
+- TTL-based caching reduces API calls to Unkey
+- Role-specific cache keys for granular caching
+- Automatic cache expiration and cleanup
+- Configurable timeouts and retry logic
+"""
 
 import time
 from functools import lru_cache
@@ -34,22 +83,35 @@ class UnkeyAuthorizationRequest(BaseModel):
 
 
 class UnkeyVerifyRequest(BaseModel):
-    """Request model for Unkey key verification."""
+    """Request model for Unkey key verification (v2 API)."""
 
-    api_id: str = Field(alias="apiId")
     key: str
-    authorization: Optional[UnkeyAuthorizationRequest] = None
+    permissions: Optional[str] = None
 
 
-class UnkeyVerifyResponse(BaseModel):
-    """Response model from Unkey key verification."""
+class UnkeyResponseMeta(BaseModel):
+    """Meta information from Unkey API response."""
+
+    request_id: Optional[str] = Field(default=None, alias="requestId")
+
+
+class UnkeyResponseData(BaseModel):
+    """Data portion of Unkey API response."""
 
     valid: bool
     key_id: Optional[str] = Field(default=None, alias="keyId")
+    name: Optional[str] = None
     permissions: Optional[List[str]] = None
     roles: Optional[List[str]] = None
     meta: Optional[Dict] = None
     identity: Optional[Dict] = None
+
+
+class UnkeyVerifyResponse(BaseModel):
+    """Response model from Unkey key verification (new nested format)."""
+
+    meta: Optional[UnkeyResponseMeta] = None
+    data: UnkeyResponseData
 
 
 class UnkeyValidationResult(BaseModel):
@@ -70,26 +132,28 @@ class UnkeyClient:
     def __init__(
         self,
         api_key: str,
-        app_id: str,
         cache_ttl_seconds: int = 300,
-        base_url: str = "https://api.unkey.dev",
+        base_url: Optional[str] = None,
         timeout_seconds: float = 10.0,
     ):
         """Initialize Unkey client with API credentials and configuration."""
         self.api_key = api_key
-        self.app_id = app_id
-        self.base_url = base_url
+        self.base_url = base_url if base_url is not None else get_auth_config().base_url
         self.cache_ttl_seconds = cache_ttl_seconds
         self.timeout_seconds = timeout_seconds
         self._validation_cache: Dict[str, CachedValidationResult] = {}
 
     def _build_request(self, key: str, required_role: Optional[Role] = None) -> UnkeyVerifyRequest:
-        """Build Unkey verification request."""
-        authorization = None
+        """Build Unkey verification request for v2 API."""
+        # v2 API uses string-based permissions instead of authorization objects
+        # Role checking is typically done client-side after getting the response
+        permissions = None
         if required_role:
-            authorization = UnkeyAuthorizationRequest(roles=str(required_role))
+            # Convert role to permission string format if needed
+            # For now, we'll let the API return all roles and filter client-side
+            pass
 
-        return UnkeyVerifyRequest(apiId=self.app_id, key=key, authorization=authorization)
+        return UnkeyVerifyRequest(key=key, permissions=permissions)
 
     async def _make_verify_request(self, request_data: UnkeyVerifyRequest) -> UnkeyVerifyResponse:
         """
@@ -108,8 +172,11 @@ class UnkeyClient:
         """
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"{self.base_url}/v1/keys.verifyKey",
-                headers={"Content-Type": "application/json"},
+                f"{self.base_url}/keys.verifyKey",
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {self.api_key}",
+                },
                 json=request_data.model_dump(by_alias=True, exclude_none=True),
                 timeout=self.timeout_seconds,
             )
@@ -135,28 +202,28 @@ class UnkeyClient:
             Role enum if found and valid, None otherwise
         """
         # Try to find a matching role from Unkey roles array first
-        if unkey_response.roles:
-            for unkey_role in unkey_response.roles:
+        if unkey_response.data.roles:
+            for unkey_role in unkey_response.data.roles:
                 try:
                     return Role.from_string(unkey_role)
                 except ValueError:
                     continue
 
-        # Try to extract role from meta as fallback
-        if unkey_response.meta and "role" in unkey_response.meta:
-            role_str = unkey_response.meta["role"]
+        # Try to extract role from data.meta as fallback
+        if unkey_response.data.meta and "role" in unkey_response.data.meta:
+            role_str = unkey_response.data.meta["role"]
             try:
                 return Role.from_string(role_str)
             except ValueError as e:
-                logger.warning(f"Invalid role from meta: {role_str} - {e}")
+                logger.warning(f"Invalid role from data.meta: {role_str} - {e}")
 
-        # Try to extract role from identity as final fallback
-        if unkey_response.identity and "role" in unkey_response.identity:
-            role_str = unkey_response.identity["role"]
+        # Try to extract role from data.identity as final fallback
+        if unkey_response.data.identity and "role" in unkey_response.data.identity:
+            role_str = unkey_response.data.identity["role"]
             try:
                 return Role.from_string(role_str)
             except ValueError as e:
-                logger.warning(f"Invalid role from identity: {role_str} - {e}")
+                logger.warning(f"Invalid role from data.identity: {role_str} - {e}")
 
         return None
 
@@ -170,7 +237,7 @@ class UnkeyClient:
         Returns:
             UnkeyValidationResult with extracted information
         """
-        if not unkey_response.valid:
+        if not unkey_response.data.valid:
             return UnkeyValidationResult(
                 valid=False, error="Invalid API key or insufficient permissions"
             )
@@ -179,11 +246,11 @@ class UnkeyClient:
 
         return UnkeyValidationResult(
             valid=True,
-            key_id=unkey_response.key_id,
+            key_id=unkey_response.data.key_id,
             role=role,
-            permissions=unkey_response.permissions,
-            roles=unkey_response.roles,
-            meta=unkey_response.meta,
+            permissions=unkey_response.data.permissions,
+            roles=unkey_response.data.roles,
+            meta=unkey_response.data.meta,
         )
 
     def _get_cache_key(self, key: str, required_role: Optional[Role] = None) -> str:
@@ -263,7 +330,6 @@ def get_unkey_client() -> UnkeyClient:
     config = get_auth_config()
     return UnkeyClient(
         api_key=config.api_key,
-        app_id=config.app_id,
         cache_ttl_seconds=config.cache_ttl_seconds,
         base_url=config.base_url,
         timeout_seconds=config.timeout_seconds,

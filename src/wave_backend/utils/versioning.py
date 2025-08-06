@@ -187,7 +187,7 @@ def log_version_info(client_version: str, user_agent: Optional[str] = None):
         user_agent: User agent string from User-Agent header (optional)
 
     Examples of log output:
-        INFO: "Compatible versions: Client v1.0.0, API v1.0.1"
+        DEBUG: "Compatible versions: Client v1.0.0, API v1.0.1"
         WARNING: "Version compatibility: Major version mismatch: Client v1.0.0..."
         DEBUG: "User agent: wave-python-client/1.0.0"
     """
@@ -196,7 +196,7 @@ def log_version_info(client_version: str, user_agent: Optional[str] = None):
     if warning:
         logger.warning(f"Version compatibility: {warning}")
     else:
-        logger.info(f"Compatible versions: Client v{client_version}, API v{API_VERSION}")
+        logger.debug(f"Compatible versions: Client v{client_version}, API v{API_VERSION}")
 
     # Log user agent for additional context
     if user_agent:

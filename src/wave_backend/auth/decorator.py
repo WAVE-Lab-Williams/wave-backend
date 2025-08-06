@@ -135,7 +135,7 @@ def require_role(minimum_role: Role):
         if not role.can_access(minimum_role):
             raise_insufficient_permissions_error(role, minimum_role)
 
-        logger.info(f"Authorized access - Key ID: {key_id}, Role: {role}")
+        logger.debug(f"Authorized access - Key ID: {key_id}, Role: {role}")
         return key_id, role
 
     return check_role_authorization

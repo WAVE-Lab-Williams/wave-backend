@@ -30,6 +30,7 @@ Then visit:
 - **API**: http://localhost:8000
 - **Interactive Docs**: http://localhost:8000/docs
 - **API Documentation**: [docs/api-usage.md](docs/api-usage.md)
+- **Authentication Guide**: [docs/authentication.md](docs/authentication.md)
 - **Database schema**: [docs/database-schema.md](docs/database-schema.md)
 
 ### 📊 API Capabilities
@@ -103,35 +104,22 @@ Key configuration variables:
 - `POSTGRES_TEST_PORT` - Test database port (default: 5433)
 - `FASTAPI_HOST` - FastAPI host (default: 0.0.0.0)
 - `FASTAPI_PORT` - FastAPI port (default: 8000)
+- `ROOT_VALIDATOR_KEY` - Unkey root API key for backend authentication validation
+- `WAVE_API_KEY` - User API key for development/testing (optional)
 
 
 ### 📁 Project Structure
 
 ```
 src/wave_backend/
-├── api/                    # FastAPI application and routes
-│   ├── main.py            # FastAPI app setup and configuration
+├── api/                   # FastAPI application and routes
+│   ├── middleware/        # Custom middleware components
 │   └── routes/            # API endpoint definitions
-│       ├── experiments.py      # Experiment management
-│       ├── experiment_data.py  # Dynamic data operations
-│       ├── experiment_types.py # Experiment type definitions
-│       ├── search.py           # Advanced search capabilities
-│       └── tags.py             # Tag management
+├── auth/                  # Authentication and authorization
 ├── models/                # Database models and configuration
-│   ├── database.py        # Database connection and sessions
-│   └── models.py          # SQLAlchemy ORM models
 ├── schemas/               # Pydantic request/response models
-│   ├── schemas.py         # Core data schemas
-│   ├── search_schemas.py  # Search-specific schemas
-│   └── column_types.py    # Database column type mappings
 ├── services/              # Business logic layer
-│   ├── experiments.py         # Experiment operations
-│   ├── experiment_data.py     # Dynamic table management
-│   ├── experiment_types.py    # Experiment type operations
-│   ├── search.py              # Advanced search service
-│   └── tags.py                # Tag operations
 └── utils/                 # Utility modules
-    └── logging.py         # Centralized logging configuration
 
 tests/
 ├── small/                 # Unit tests (no database)
@@ -139,8 +127,7 @@ tests/
 │   └── e2e/              # End-to-end workflow tests
 └── large/                 # Performance and load tests
 
-docs/
-└── api-usage.md          # Comprehensive API documentation
+docs/                      # Documentation
 ```
 
 ### 🧪 Development Workflow
