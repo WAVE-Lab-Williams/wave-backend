@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, Header
+from fastapi.middleware.cors import CORSMiddleware
 
 from wave_backend.api.middleware.versioning import VersioningMiddleware
 from wave_backend.api.routes import (
@@ -64,6 +65,21 @@ app = FastAPI(
     description=load_api_description(),
     version=API_VERSION,
     lifespan=lifespan,
+)
+
+# Add CORS middleware - must be added before other middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:8080",
+        "https://*.vercel.app",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["X-WAVE-API-Version"],  # Ensure version header is exposed
 )
 
 # Add versioning middleware
