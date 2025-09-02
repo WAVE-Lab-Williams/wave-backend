@@ -10,7 +10,7 @@
     ]
   },
   "deploy": {
-    "startCommand": "hypercorn wave_backend.api.main:app --bind \"[::]:$PORT\"",
+    "startCommand": "cd src && hypercorn wave_backend.api.main:app --bind \"[::]:$PORT\"",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 30,
     "restartPolicyType": "ON_FAILURE",
