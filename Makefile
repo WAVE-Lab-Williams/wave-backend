@@ -67,6 +67,12 @@ pylint:
 
 format: isort black flake8 pylint
 
+# Export requirements.txt for deployment platforms
+requirements:
+	@echo "Exporting requirements.txt from uv..."
+	uv export --no-dev --no-hashes > requirements.txt
+	@echo "✓ requirements.txt exported"
+
 ###############################################################################
 # Local Development
 ###############################################################################
