@@ -1,9 +1,19 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "NIXPACKS"
+    "builder": "NIXPACKS",
+    "watchPatterns": [
+      "src/**",
+      "pyproject.toml",
+      "requirements.txt",
+      "railway.json"
+    ]
   },
   "deploy": {
-    "startCommand": "hypercorn wave_backend.api.main:app --bind \"[::]:$PORT\""
+    "startCommand": "cd src && hypercorn wave_backend.api.main:app --bind \"[::]:$PORT\"",
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 30,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 1
   }
 }
