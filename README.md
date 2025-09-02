@@ -192,3 +192,19 @@ docs/                      # Documentation
 - `make format` - Format code (isort, black, flake8, pylint)
 - `make clean` - Clean up temporary files
 
+## Deployment
+
+### Railway Deployment
+
+This project is configured for deployment on Railway using nixpacks auto-detection.
+
+**Required Environment Variables:**
+- `ROOT_VALIDATOR_KEY` - Your Unkey root API key for authentication validation
+
+**Optional Environment Variables:**
+- `LOG_LEVEL` - Set to `INFO` or `WARNING` for production
+- `ENVIRONMENT` - Set to `production` for production deployments
+
+**Database:**
+Railway automatically provides `DATABASE_URL` when you add a PostgreSQL service to your project.
+
