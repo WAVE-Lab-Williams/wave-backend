@@ -196,17 +196,15 @@ docs/                      # Documentation
 
 ### Railway Deployment
 
-This project is configured for deployment on Railway using nixpacks auto-detection.
+This project is configured for deployment on Railway using the `railway.json` settings file.
 
 **Required Environment Variables:**
 - `ROOT_VALIDATOR_KEY` - Your Unkey root API key for authentication validation
+- `DATABASE_URL` - Provided automatically when you add a PostgreSQL service to your project, but you'll still need to manually add this environment variable to the backend instance (you'll know you did this correctly if you see a connection between your services on the Railway workspace)
 
 **Optional Environment Variables:**
 - `LOG_LEVEL` - Set to `INFO` or `WARNING` for production
 - `ENVIRONMENT` - Set to `production` for production deployments
-
-**Database:**
-Railway automatically provides `DATABASE_URL` when you add a PostgreSQL service to your project.
 
 **Deployment Workflow:**
 - Development happens on `main` branch with CI/CD validation
