@@ -208,3 +208,9 @@ This project is configured for deployment on Railway using nixpacks auto-detecti
 **Database:**
 Railway automatically provides `DATABASE_URL` when you add a PostgreSQL service to your project.
 
+**Deployment Workflow:**
+- Development happens on `main` branch with CI/CD validation
+- Deploy to production by merging `main` → `release` branch
+- Railway watches the `release` branch for automatic deployments
+- Only merge to `release` when code is tested and ready for production
+
