@@ -2,6 +2,7 @@
 FastAPI main application module.
 """
 
+import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
@@ -50,9 +51,18 @@ async def lifespan(app: FastAPI):
     logger.info("WAVE Backend API is starting up...")
 
     # Create database tables
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    logger.info("Database tables created/verified")
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("Database tables created/verified")
+    except Exception as e:
+        logger.error(f"Database connection failed: {e}")
+        logger.error("Unable to connect to PostgreSQL database. Please check:")
+        logger.error("1. DATABASE_URL environment variable is set")
+        logger.error("2. PostgreSQL service is running and accessible")
+        logger.error("3. Database credentials are correct")
+        logger.error("Application will exit now.")
+        sys.exit(1)
 
     yield
 

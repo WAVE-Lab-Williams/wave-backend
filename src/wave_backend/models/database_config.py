@@ -48,6 +48,9 @@ class DatabaseConfig:
         else:
             explicit_url = os.getenv("DATABASE_URL")
             if explicit_url:
+                # Convert sync PostgreSQL URL to async if needed
+                if explicit_url.startswith("postgresql://"):
+                    return explicit_url.replace("postgresql://", "postgresql+asyncpg://", 1)
                 return explicit_url
 
         # Build URL from components
