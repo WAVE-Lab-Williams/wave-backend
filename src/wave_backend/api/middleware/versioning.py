@@ -46,7 +46,7 @@ class VersioningMiddleware(BaseHTTPMiddleware):
             log_version_info(client_version, user_agent)
         elif user_agent:
             # Log user agent without version checking if no client version header
-            logger.debug(f"No client version header, User agent: {user_agent}")
+            logger.debug(f"No client version header specified for agent: {user_agent}")
 
         # Process the request
         response = await call_next(request)
