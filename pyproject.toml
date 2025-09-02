@@ -12,6 +12,7 @@ dependencies = [
     "sqlalchemy[asyncio]>=2.0.36",
     "alembic>=1.14.0",
     "httpx>=0.28.0",
+    "hypercorn>=0.17.3",
 ]
 
 

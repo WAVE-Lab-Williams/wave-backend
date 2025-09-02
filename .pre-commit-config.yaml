@@ -18,3 +18,12 @@ repos:
         pass_filenames: false
         always_run: true
         verbose: true
+
+      - id: requirements-sync
+        name: requirements-sync
+        description: Keep requirements.txt in sync with pyproject.toml
+        entry: bash -c "if [ -f .venv/bin/activate ]; then source .venv/bin/activate; fi && make requirements"
+        language: python
+        files: pyproject.toml
+        pass_filenames: false
+        verbose: true
