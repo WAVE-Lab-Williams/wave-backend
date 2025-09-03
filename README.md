@@ -1,5 +1,8 @@
 # WAVE Backend
 
+[![CI Tests](https://github.com/WAVE-Lab-Williams/wave-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/WAVE-Lab-Williams/wave-backend/actions/workflows/ci.yml)
+[![Railway Live API](https://img.shields.io/badge/Railway-Live%20API-mediumpurple?logo=railway&logoColor=white)](https://wave-backend-production-8781.up.railway.app/docs)
+
 FastAPI backend for the WAVE lab with PostgreSQL database support.
 
 ## Repository Overview
