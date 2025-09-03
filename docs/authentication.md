@@ -389,50 +389,23 @@ logger.setLevel(logging.DEBUG)
 
 2. **Permission Design**:
    - Follow principle of least privilege
-   - Use hierarchical roles appropriately
    - Regularly audit user permissions in Unkey workspace
-
-3. **Network Security**:
-   - Use HTTPS for all API communications
-   - Implement proper timeout and retry logic
-   - Monitor for unusual authentication patterns
 
 ### Performance
 
-1. **Caching**:
-   - Use default cache TTL (300 seconds) for most use cases
-   - Clear cache when permissions change
-   - Monitor cache hit rates for optimization
+**Caching**:
+- Use default cache TTL (60 seconds) for most use cases
+- Clear cache when permissions change (not yet exposed via API)
+- Monitor cache hit rates for optimization (Not implemented)
 
-2. **API Usage**:
-   - Batch user operations when possible
-   - Implement circuit breakers for Unkey API calls
-   - Use async/await patterns for concurrent requests
-
-### Monitoring
-
-1. **Metrics to Track**:
-   - Authentication success/failure rates
-   - API response times from Unkey
-   - Cache hit/miss ratios
-   - Role distribution across requests
-
-2. **Alerting**:
-   - High authentication failure rates
-   - Unkey API unavailability
-   - Unusual permission escalation attempts
 
 ### Development
 
-1. **Environment Setup**:
-   - Use separate Unkey workspaces for dev/staging/production
-   - Implement proper key rotation procedures
-   - Document role assignments and permissions
+**Environment Setup**:
+- Use separate Unkey workspaces for dev/staging/production
+- Implement proper key rotation procedures
+- Document role assignments and permissions
 
-2. **Testing**:
-   - Write tests for all authentication scenarios
-   - Test network failure conditions
-   - Validate role hierarchy enforcement
 
 ---
 
