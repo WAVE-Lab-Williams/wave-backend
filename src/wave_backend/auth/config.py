@@ -11,7 +11,7 @@ class AuthConfig(BaseModel):
 
     api_key: str = Field(..., min_length=1, description="Unkey root API key for validation")
     cache_ttl_seconds: int = Field(
-        default=300, description="Authentication cache TTL in seconds", gt=0, le=3600
+        default=60, description="Authentication cache TTL in seconds", gt=0, le=3600
     )
     base_url: str = Field(default="https://api.unkey.com/v2", description="Unkey API base URL")
     timeout_seconds: float = Field(
