@@ -29,9 +29,9 @@ The system implements hierarchical permissions where higher roles can access low
 
 This is the critical backend authentication key:
 
-1. Go to "API Keys" in your workspace
+1. Go to "Settings > Root Keys" in your workspace (using Unkey)
 2. Create a new API key named "ROOT_VALIDATOR_KEY" or "Backend Validator"
-3. **Important**: Grant it the `api.*.verify_key` permission (this allows it to validate other keys)
+3. **Important**: Grant it permission to access the backend
 4. Set no expiration (or a very long expiration for production)
 5. No rate limiting needed for backend use
 6. Copy this key and store it securely as `ROOT_VALIDATOR_KEY` in your backend environment
@@ -67,7 +67,7 @@ The authentication system uses two distinct types of API keys:
 
 - **Purpose**: Authenticates the backend service to Unkey's API
 - **Storage**: Backend environment variable (`ROOT_VALIDATOR_KEY`)
-- **Permissions**: Has `api.*.verify_key` permission in Unkey workspace
+- **Permissions**: Has access to the entire backend through Unkey workspace's "Root Keys" section.
 - **Usage**: Used in Authorization header when calling Unkey's validation API
 - **Security**: Never exposed to clients, stays secure on backend servers
 - **Scope**: Cannot and should not be used for user operations
