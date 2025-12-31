@@ -33,7 +33,10 @@ async def create_experiment_type(
         db, experiment_type.name
     )
     if existing_name:
-        raise HTTPException(status_code=400, detail="Experiment type with this name already exists")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Experiment type with this name already exists (ID: {existing_name.id})",
+        )
 
     try:
         db_experiment_type = await ExperimentTypeService.create_experiment_type(db, experiment_type)
@@ -83,7 +86,8 @@ async def update_experiment_type(
         )
         if existing_name and existing_name.id != experiment_type_id:
             raise HTTPException(
-                status_code=400, detail="Experiment type with this name already exists"
+                status_code=400,
+                detail=f"Experiment type with this name already exists (ID: {existing_name.id})",
             )
 
     db_experiment_type = await ExperimentTypeService.update_experiment_type(
