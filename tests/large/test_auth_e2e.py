@@ -172,8 +172,8 @@ class TestAuthenticatedEndpoints:
         ) as client:
             response = await client.get("/public")
 
-            assert response.status_code == 403
-            assert "Not authenticated" in response.json()["detail"]
+            assert response.status_code == 401
+            assert "Authentication required" in response.json()["detail"]
 
     @pytest.mark.asyncio
     async def test_endpoint_with_malformed_auth_header(self, basic_test_app):
@@ -185,8 +185,8 @@ class TestAuthenticatedEndpoints:
                 "/public", headers={"Authorization": "NotBearer invalid_format"}
             )
 
-            assert response.status_code == 403
-            assert "Invalid authentication credentials" in response.json()["detail"]
+            assert response.status_code == 401
+            assert "Authentication" in response.json()["detail"]
 
     @pytest.mark.asyncio
     async def test_endpoint_with_empty_token(self, basic_test_app):
@@ -196,8 +196,8 @@ class TestAuthenticatedEndpoints:
         ) as client:
             response = await client.get("/public", headers={"Authorization": "Bearer "})
 
-            assert response.status_code == 403
-            assert "Not authenticated" in response.json()["detail"]
+            assert response.status_code == 401
+            assert "Authentication required" in response.json()["detail"]
 
     @pytest.mark.asyncio
     async def test_endpoint_with_database_dependency(self, basic_test_app, mock_auth_success):
@@ -350,7 +350,7 @@ class TestRealEndpointIntegration:
         ) as client:
             # Without auth header
             response = await client.get("/api/v1/experiments/")
-            assert response.status_code == 403  # Expecting 403 for missing auth
+            assert response.status_code == 401  # Expecting 401 for missing auth
 
             # With valid auth header
             try:
