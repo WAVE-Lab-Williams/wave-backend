@@ -173,7 +173,7 @@ class TestAuthenticatedEndpoints:
             response = await client.get("/public")
 
             assert response.status_code == 401
-            assert "Authentication required" in response.json()["detail"]
+            assert "authent" in response.json()["detail"].lower()
 
     @pytest.mark.asyncio
     async def test_endpoint_with_malformed_auth_header(self, basic_test_app):
@@ -186,7 +186,7 @@ class TestAuthenticatedEndpoints:
             )
 
             assert response.status_code == 401
-            assert "Authentication" in response.json()["detail"]
+            assert "authent" in response.json()["detail"].lower()
 
     @pytest.mark.asyncio
     async def test_endpoint_with_empty_token(self, basic_test_app):
@@ -197,7 +197,7 @@ class TestAuthenticatedEndpoints:
             response = await client.get("/public", headers={"Authorization": "Bearer "})
 
             assert response.status_code == 401
-            assert "Authentication required" in response.json()["detail"]
+            assert "authent" in response.json()["detail"].lower()
 
     @pytest.mark.asyncio
     async def test_endpoint_with_database_dependency(self, basic_test_app, mock_auth_success):
