@@ -4,12 +4,15 @@
     "builder": "NIXPACKS",
     "watchPatterns": [
       "src/**",
+      "alembic/**",
+      "alembic.ini",
       "pyproject.toml",
       "requirements.txt",
       "railway.json"
     ]
   },
   "deploy": {
+    "preDeployCommand": "alembic upgrade head",
     "startCommand": "cd src && hypercorn wave_backend.api.main:app --bind \"[::]:$PORT\"",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 30,

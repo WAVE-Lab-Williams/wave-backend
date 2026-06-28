@@ -50,6 +50,11 @@ class Experiment(Base):
     description = Column(Text, nullable=False)
     tags = Column(ARRAY(String(50)), nullable=True, default=list)
     additional_data = Column(JSON, nullable=True, default=dict)
+    # Optional, free-form experiment hyperparameters pulled by the frontend at
+    # runtime (sample ratios, randomization probabilities, trial counts, etc.).
+    # Nullable for backwards compatibility with experiments created before this
+    # field existed; absent config => the frontend falls back to its defaults.
+    config = Column(JSON, nullable=True, default=dict)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 

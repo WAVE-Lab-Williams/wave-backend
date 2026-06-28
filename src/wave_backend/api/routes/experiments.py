@@ -11,6 +11,8 @@ from wave_backend.auth.roles import Role
 from wave_backend.models.database import get_db
 from wave_backend.schemas.schemas import (
     ExperimentColumnsResponse,
+    ExperimentConfigResponse,
+    ExperimentConfigUpdate,
     ExperimentCreate,
     ExperimentResponse,
     ExperimentUpdate,
@@ -93,6 +95,39 @@ async def delete_experiment(
     if not success:
         raise HTTPException(status_code=404, detail="Experiment not found")
     return {"message": "Experiment deleted successfully"}
+
+
+@router.get("/{experiment_uuid}/config", response_model=ExperimentConfigResponse)
+@auth.role(Role.EXPERIMENTEE)
+async def get_experiment_config(
+    experiment_uuid: UUID, db: AsyncSession = Depends(get_db), auth: Tuple[str, Role] = None
+):  # noqa: F841
+    """Get an experiment's runtime config (hyperparameters).
+
+    Readable at experimentee level so the in-browser experiment can pull its own
+    config. Returns only the config, never the full experiment record.
+    """
+    db_experiment = await ExperimentService.get_experiment(db, experiment_uuid)
+    if not db_experiment:
+        raise HTTPException(status_code=404, detail="Experiment not found")
+    return ExperimentConfigResponse(experiment_uuid=experiment_uuid, config=db_experiment.config)
+
+
+@router.put("/{experiment_uuid}/config", response_model=ExperimentConfigResponse)
+@auth.role(Role.RESEARCHER)
+async def update_experiment_config(
+    experiment_uuid: UUID,
+    config_update: ExperimentConfigUpdate,
+    db: AsyncSession = Depends(get_db),
+    auth: Tuple[str, Role] = None,  # noqa: F841
+):
+    """Replace an experiment's runtime config (researcher only)."""
+    db_experiment = await ExperimentService.set_experiment_config(
+        db, experiment_uuid, config_update.config
+    )
+    if not db_experiment:
+        raise HTTPException(status_code=404, detail="Experiment not found")
+    return ExperimentConfigResponse(experiment_uuid=experiment_uuid, config=db_experiment.config)
 
 
 @router.get("/{experiment_uuid}/columns", response_model=ExperimentColumnsResponse)

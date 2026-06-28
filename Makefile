@@ -169,6 +169,30 @@ endif
 	@echo "Complete shutdown finished - all services stopped"
 
 ###############################################################################
+# Database Backup / Restore (self-hosted, no Railway managed backups)
+###############################################################################
+# Dumps to local disk via a pinned postgres:<major> container so the client
+# version always matches the server. See scripts/db_backup.sh for env vars.
+#
+# Back up a database (e.g. prod from Railway):
+#   make db-backup DATABASE_URL="postgresql://user:pass@host:port/db" \
+#       BACKUP_DIR=/Volumes/your-drive/wave-backups PG_MAJOR=16
+#
+# Restore a dump into an EXPLICIT target (rehearsal target, NOT prod):
+#   make db-restore DUMP=./backups/wave_prod_XXXX.dump \
+#       TARGET_URL=postgresql://wave_user:wave_password@localhost:5432/wave_restore
+
+db-backup:
+	@./scripts/db_backup.sh
+
+db-restore:
+	@if [ -z "$(DUMP)" ] || [ -z "$(TARGET_URL)" ]; then \
+		echo "Usage: make db-restore DUMP=<dump-file> TARGET_URL=<target_database_url>"; \
+		exit 1; \
+	fi
+	@./scripts/db_restore.sh "$(DUMP)" "$(TARGET_URL)"
+
+###############################################################################
 # Docker Compose Commands
 ###############################################################################
 
