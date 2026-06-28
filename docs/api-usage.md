@@ -97,7 +97,36 @@ Once you have experiment types defined, you can create individual experiment ins
     "difficulty_level": 2,
     "baseline_score": 85,
     "notes": "First session, participant was alert and cooperative"
+  },
+  "config": {
+    "number_of_repetitions": 2
   }
+}
+```
+
+`config` is optional, free-form experiment hyperparameters that the frontend pulls at runtime and
+merges over its in-code defaults. It is nullable and backwards compatible: experiments created
+before this field existed return `{}`.
+
+#### Reading / updating just the config
+
+The experiment frontend runs with an **experimentee**-level key and cannot read the full experiment
+record. Use the narrow config endpoints instead:
+
+**GET `/api/v1/experiments/{experiment_uuid}/config`** (experimentee+)
+
+```json
+{
+  "experiment_uuid": "550e8400-e29b-41d4-a716-446655440000",
+  "config": { "number_of_repetitions": 2 }
+}
+```
+
+**PUT `/api/v1/experiments/{experiment_uuid}/config`** (researcher+) — replaces the stored config:
+
+```json
+{
+  "config": { "number_of_repetitions": 3 }
 }
 ```
 

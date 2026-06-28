@@ -110,6 +110,27 @@ class ExperimentService:
         return result.scalar_one()
 
     @staticmethod
+    async def set_experiment_config(
+        db: AsyncSession, experiment_uuid: UUID, config: dict
+    ) -> Optional[Experiment]:
+        """Replace an experiment's runtime config. Returns None if not found."""
+        db_experiment = await ExperimentService.get_experiment(db, experiment_uuid)
+        if not db_experiment:
+            return None
+
+        db_experiment.config = config
+        await db.commit()
+        await db.refresh(db_experiment)
+
+        # Reload with the experiment_type relationship for safe serialization.
+        result = await db.execute(
+            select(Experiment)
+            .options(selectinload(Experiment.experiment_type))
+            .where(Experiment.uuid == db_experiment.uuid)
+        )
+        return result.scalar_one()
+
+    @staticmethod
     async def delete_experiment(db: AsyncSession, experiment_uuid: UUID) -> bool:
         """Delete an experiment."""
         db_experiment = await ExperimentService.get_experiment(db, experiment_uuid)
