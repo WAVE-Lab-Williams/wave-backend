@@ -19,7 +19,7 @@
 #       postgresql://wave_user:wave_password@localhost:5432/wave_restore
 #
 # Env vars (from scripts/.env.backup if present, or the environment):
-#   PG_MAJOR          (default 16) Postgres major version — match the dump's server.
+#   PG_MAJOR          (default 17) Postgres major version — match the dump's server.
 #   CONTAINER_RUNTIME (default: podman if present, else docker)
 #   ENV_FILE          (default scripts/.env.backup) gitignored file to source.
 #
@@ -35,7 +35,7 @@ fi
 
 DUMP="${1:?usage: db_restore.sh <dump-file> <target_database_url>}"
 TARGET_URL="${2:?refusing to guess target DB; pass it explicitly (NOT prod unless intended)}"
-PG_MAJOR="${PG_MAJOR:-16}"
+PG_MAJOR="${PG_MAJOR:-17}"
 CONTAINER_RUNTIME="${CONTAINER_RUNTIME:-$(command -v podman >/dev/null 2>&1 && echo podman || echo docker)}"
 
 if [ ! -s "$DUMP" ]; then

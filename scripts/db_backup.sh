@@ -20,7 +20,7 @@
 # Env vars (from scripts/.env.backup if present, or the environment):
 #   DATABASE_URL     (required) connection string to dump (e.g. prod from Railway).
 #   BACKUP_DIR       (default ./backups) where .dump files are written.
-#   PG_MAJOR         (default 16) Postgres major version — MATCH the server.
+#   PG_MAJOR         (default 17) Postgres major version — MATCH the server.
 #   RETENTION_DAYS   (default 30) prune dumps older than this. 0 disables pruning.
 #   CONTAINER_RUNTIME(default: podman if present, else docker)
 #   ENV_FILE         (default scripts/.env.backup) gitignored file to source.
@@ -36,9 +36,13 @@ if [ -f "$ENV_FILE" ]; then
   set -a; . "$ENV_FILE"; set +a
 fi
 
-: "${DATABASE_URL:?set DATABASE_URL (in scripts/.env.backup or the environment) to the connection string you want to back up}"
+# Accept either DATABASE_URL or Railway's DATABASE_PUBLIC_URL (the public TCP
+# proxy string you use from a laptop). Prefer an explicit DATABASE_URL if set.
+DATABASE_URL="${DATABASE_URL:-${DATABASE_PUBLIC_URL:-}}"
+
+: "${DATABASE_URL:?set DATABASE_URL or DATABASE_PUBLIC_URL (in scripts/.env.backup or the environment)}"
 BACKUP_DIR="${BACKUP_DIR:-./backups}"
-PG_MAJOR="${PG_MAJOR:-16}"
+PG_MAJOR="${PG_MAJOR:-17}"
 RETENTION_DAYS="${RETENTION_DAYS:-30}"
 CONTAINER_RUNTIME="${CONTAINER_RUNTIME:-$(command -v podman >/dev/null 2>&1 && echo podman || echo docker)}"
 
