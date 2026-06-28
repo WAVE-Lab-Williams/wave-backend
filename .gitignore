@@ -52,5 +52,11 @@ htmlcov/
 # Local environment files
 .env
 
+# Backup scripts' connection-string env file (keep prod creds out of git)
+scripts/.env.backup
+# Local DB dumps
+backups/
+*.dump
+
 # UV
 uv.lock

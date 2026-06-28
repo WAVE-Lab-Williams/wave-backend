@@ -81,6 +81,7 @@ Stores individual experiment instances that reference experiment types.
 | `description`        | TEXT                     | NOT NULL                                    | Experiment description       |
 | `tags`               | VARCHAR(50)[]            | NULLABLE, DEFAULT []                        | Array of tag names           |
 | `additional_data`    | JSON                     | NULLABLE, DEFAULT {}                        | Flexible metadata storage    |
+| `config`             | JSON                     | NULLABLE, DEFAULT {}                        | Runtime hyperparameters pulled by the frontend (free-form) |
 | `created_at`         | TIMESTAMP WITH TIME ZONE | DEFAULT now()                               | Creation timestamp           |
 | `updated_at`         | TIMESTAMP WITH TIME ZONE | DEFAULT now(), ON UPDATE now()              | Last update timestamp        |
 

@@ -197,6 +197,21 @@ class ExperimentBase(BaseModel):
             {"baseline_score": 85, "target_accuracy": 0.9},
         ],
     )
+    config: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Optional, free-form experiment hyperparameters that the frontend pulls at "
+        "runtime and merges over its in-code defaults (sample ratios, randomization "
+        "probabilities, trial counts, timing, etc.). Omit to let the frontend use its defaults.",
+        examples=[
+            {"number_of_repetitions": 2},
+            {"number_of_repetitions": 5},
+        ],
+    )
+
+    @field_validator("config", mode="before")
+    def coerce_null_config(cls, v):
+        """Legacy rows created before this field existed store NULL; treat as {}."""
+        return {} if v is None else v
 
 
 class ExperimentCreate(ExperimentBase):
@@ -218,6 +233,9 @@ class ExperimentUpdate(BaseModel):
     additional_data: Optional[Dict[str, Any]] = Field(
         None, description="Additional experiment data"
     )
+    config: Optional[Dict[str, Any]] = Field(
+        None, description="Experiment hyperparameters (free-form). Replaces the stored config."
+    )
 
 
 class ExperimentResponse(ExperimentBase):
@@ -230,6 +248,35 @@ class ExperimentResponse(ExperimentBase):
     created_at: datetime
     updated_at: datetime
     experiment_type: ExperimentTypeResponse
+
+
+class ExperimentConfigResponse(BaseModel):
+    """Narrow response exposing only an experiment's runtime config.
+
+    Used by the experiment-data-collecting frontend, which runs with an
+    experimentee-level key and must NOT see the full experiment record.
+    """
+
+    experiment_uuid: UUID
+    config: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Free-form experiment hyperparameters (empty object if none set).",
+    )
+
+    @field_validator("config", mode="before")
+    def coerce_null_config(cls, v):
+        """Legacy rows store NULL config; expose as an empty object."""
+        return {} if v is None else v
+
+
+class ExperimentConfigUpdate(BaseModel):
+    """Request body for replacing an experiment's runtime config."""
+
+    config: Dict[str, Any] = Field(
+        ...,
+        description="Experiment hyperparameters (free-form). Replaces the stored config entirely.",
+        examples=[{"number_of_repetitions": 3}],
+    )
 
 
 class ColumnTypeInfo(BaseModel):
